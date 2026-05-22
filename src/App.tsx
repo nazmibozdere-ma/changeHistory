@@ -46,6 +46,12 @@ export default function App() {
 
   const filtered = useMemo(() => {
     return mockData.filter(row => {
+      if (dateRange.start && row.date < dateRange.start) return false;
+      if (dateRange.end) {
+        const endOfDay = new Date(dateRange.end.getFullYear(), dateRange.end.getMonth(), dateRange.end.getDate(), 23, 59, 59, 999);
+        if (row.date > endOfDay) return false;
+      }
+
       if (selectedAgents.length > 0 && !selectedAgents.some(f => agentMatchesFilter(row.agent, f))) return false;
 
       if (selectedActivities.length > 0) {
@@ -81,7 +87,7 @@ export default function App() {
       }
       return true;
     });
-  }, [selectedAgents, selectedActivities, entityFilters, selectedCampaignIds, selectedGroup]);
+  }, [selectedAgents, selectedActivities, entityFilters, selectedCampaignIds, selectedGroup, dateRange]);
 
   const typeCounts = useMemo(() => {
     const counts: Record<string, number> = {};
