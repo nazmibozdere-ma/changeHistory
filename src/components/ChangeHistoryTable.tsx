@@ -6,13 +6,6 @@ interface ChangeHistoryTableProps {
   data: ChangeRecord[];
 }
 
-const agentColor = (agent: string) => {
-  if (agent.includes('@')) return 'bg-gradient-to-br from-blue-400 to-indigo-500';
-  if (agent.includes('Budget')) return 'bg-gradient-to-br from-amber-400 to-orange-500';
-  if (agent.includes('Bidding')) return 'bg-gradient-to-br from-emerald-400 to-teal-500';
-  if (agent.includes('Harvesting')) return 'bg-gradient-to-br from-pink-400 to-rose-500';
-  return 'bg-gradient-to-br from-gray-400 to-gray-500';
-};
 
 function DetailTable({ details }: { details: RecordDetails }) {
   if (details.tableType === 'change') {
