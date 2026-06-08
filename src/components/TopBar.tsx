@@ -33,7 +33,7 @@ export default function TopBar({ selectedGroup, onGroupChange }: TopBarProps) {
 
   return (
     <div className="flex items-center justify-between px-6 py-3 bg-white border-b border-gray-200">
-      <h1 className="text-xl font-semibold text-gray-900">Change History</h1>
+      <h1 className="text-xl font-semibold text-gray-900">Change History v2</h1>
       <div className="flex items-center gap-3">
         {/* Ask AI */}
         <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-violet-100 to-blue-100 border border-violet-200 text-violet-700 text-sm font-medium hover:from-violet-200 hover:to-blue-200 transition-all">
