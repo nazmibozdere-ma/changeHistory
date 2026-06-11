@@ -211,7 +211,7 @@ export default function App() {
                     : 'border-transparent text-gray-500 hover:text-gray-700'
                 }`}
               >
-                Change History
+                Independent filters
               </button>
               <button
                 onClick={() => setActiveTab('linked')}
@@ -221,7 +221,7 @@ export default function App() {
                     : 'border-transparent text-gray-500 hover:text-gray-700'
                 }`}
               >
-                App / Campaign / Ad Group
+                Dependent filters
               </button>
             </div>
 
