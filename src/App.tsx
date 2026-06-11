@@ -1,13 +1,14 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import Sidebar from './components/Sidebar';
 import TopBar from './components/TopBar';
 import AgentFilterDropdown from './components/AgentFilterDropdown';
 import ActivityFilterDropdown from './components/ActivityFilterDropdown';
 import EntityTypeFilter from './components/EntityTypeFilter';
+import LinkedEntityFilters from './components/LinkedEntityFilters';
 import ChangeHistoryTable from './components/ChangeHistoryTable';
 import DateRangePicker from './components/DateRangePicker';
 import { mockData, agentMatchesFilter, campaignGroups } from './data/mockData';
-import type { ChangeType, CampaignGroupInfo } from './data/mockData';
+import type { ChangeType, ChangeRecord, CampaignGroupInfo } from './data/mockData';
 
 type EntityFilterMap = Partial<Record<ChangeType, string>>;
 
@@ -27,11 +28,19 @@ export default function App() {
     end:   new Date(2026, 3, 6),  // Apr 6 2026
   });
 
+  const [activeTab, setActiveTab] = useState<'history' | 'linked'>('history');
+  const [linkedAppIds, setLinkedAppIds] = useState<string[]>([]);
+  const [linkedCampaignIds, setLinkedCampaignIds] = useState<string[]>([]);
+  const [linkedAdGroupIds, setLinkedAdGroupIds] = useState<string[]>([]);
+
   const handleGroupChange = (group: CampaignGroupInfo) => {
     setSelectedGroup(group);
     setSelectedCampaignIds([]);
     setSelectedAppIds([]);
     setSelectedAdGroupIds([]);
+    setLinkedAppIds([]);
+    setLinkedCampaignIds([]);
+    setLinkedAdGroupIds([]);
   };
 
   // When campaign selection changes, clear ad group selection
@@ -40,33 +49,51 @@ export default function App() {
     setSelectedAdGroupIds([]);
   };
 
+  // App -> Campaign -> Ad Group cascade for the linked filters tab
+  const handleLinkedAppsChange = (ids: string[]) => {
+    setLinkedAppIds(ids);
+    setLinkedCampaignIds([]);
+    setLinkedAdGroupIds([]);
+  };
+
+  const handleLinkedCampaignsChange = (ids: string[]) => {
+    setLinkedCampaignIds(ids);
+    setLinkedAdGroupIds([]);
+  };
+
   const handleEntityFilterChange = (type: ChangeType, value: string) => {
     setEntityFilters(prev => ({ ...prev, [type]: value }));
   };
 
+  const matchesCommonFilters = useCallback((row: ChangeRecord) => {
+    if (dateRange.start && row.date < dateRange.start) return false;
+    if (dateRange.end) {
+      const endOfDay = new Date(dateRange.end.getFullYear(), dateRange.end.getMonth(), dateRange.end.getDate(), 23, 59, 59, 999);
+      if (row.date > endOfDay) return false;
+    }
+
+    if (selectedAgents.length > 0 && !selectedAgents.some(f => agentMatchesFilter(row.agent, f))) return false;
+
+    if (selectedActivities.length > 0) {
+      const activityKeywords: Record<string, string[]> = {
+        Create: ['created'],
+        Duplicate: ['duplicated', 'duplicate'],
+        Update: ['changed', 'added', 'updated'],
+        Delete: ['deleted', 'removed'],
+      };
+      const matches = selectedActivities.some(act => {
+        const keywords = activityKeywords[act] ?? [act.toLowerCase()];
+        return keywords.some(kw => row.activity.toLowerCase().includes(kw));
+      });
+      if (!matches) return false;
+    }
+
+    return true;
+  }, [dateRange, selectedAgents, selectedActivities]);
+
   const filtered = useMemo(() => {
     return mockData.filter(row => {
-      if (dateRange.start && row.date < dateRange.start) return false;
-      if (dateRange.end) {
-        const endOfDay = new Date(dateRange.end.getFullYear(), dateRange.end.getMonth(), dateRange.end.getDate(), 23, 59, 59, 999);
-        if (row.date > endOfDay) return false;
-      }
-
-      if (selectedAgents.length > 0 && !selectedAgents.some(f => agentMatchesFilter(row.agent, f))) return false;
-
-      if (selectedActivities.length > 0) {
-        const activityKeywords: Record<string, string[]> = {
-          Create: ['created'],
-          Duplicate: ['duplicated', 'duplicate'],
-          Update: ['changed', 'added', 'updated'],
-          Delete: ['deleted', 'removed'],
-        };
-        const matches = selectedActivities.some(act => {
-          const keywords = activityKeywords[act] ?? [act.toLowerCase()];
-          return keywords.some(kw => row.activity.toLowerCase().includes(kw));
-        });
-        if (!matches) return false;
-      }
+      if (!matchesCommonFilters(row)) return false;
 
       if (selectedCampaignIds.length > 0 && row.type === 'Campaign') {
         const selectedNames = selectedGroup.campaigns
@@ -87,7 +114,38 @@ export default function App() {
       }
       return true;
     });
-  }, [selectedAgents, selectedActivities, entityFilters, selectedCampaignIds, selectedGroup, dateRange]);
+  }, [matchesCommonFilters, entityFilters, selectedCampaignIds, selectedGroup]);
+
+  // App -> Campaign -> Ad Group cascading filters for the linked filters tab
+  const linkedFiltered = useMemo(() => {
+    const effectiveCampaigns = linkedCampaignIds.length > 0
+      ? selectedGroup.campaigns.filter(c => linkedCampaignIds.includes(c.id))
+      : linkedAppIds.length > 0
+      ? selectedGroup.campaigns.filter(c => linkedAppIds.includes(c.appId))
+      : selectedGroup.campaigns;
+
+    const effectiveAdGroups = linkedAdGroupIds.length > 0
+      ? effectiveCampaigns.flatMap(c => c.adGroups).filter(ag => linkedAdGroupIds.includes(ag.id))
+      : effectiveCampaigns.flatMap(c => c.adGroups);
+
+    return mockData.filter(row => {
+      if (!matchesCommonFilters(row)) return false;
+
+      const entityLower = row.entityName?.toLowerCase() ?? '';
+
+      if (row.type === 'Campaign' && (linkedAppIds.length > 0 || linkedCampaignIds.length > 0)) {
+        const names = effectiveCampaigns.map(c => c.name.toLowerCase());
+        if (!names.some(n => entityLower.includes(n) || n.includes(entityLower))) return false;
+      }
+
+      if (row.type === 'Ad Group' && (linkedAppIds.length > 0 || linkedCampaignIds.length > 0 || linkedAdGroupIds.length > 0)) {
+        const names = effectiveAdGroups.map(ag => ag.name.toLowerCase());
+        if (!names.some(n => entityLower.includes(n) || n.includes(entityLower))) return false;
+      }
+
+      return true;
+    });
+  }, [matchesCommonFilters, selectedGroup, linkedAppIds, linkedCampaignIds, linkedAdGroupIds]);
 
   const typeCounts = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -103,6 +161,9 @@ export default function App() {
     selectedCampaignIds.length > 0 ||
     selectedAppIds.length > 0 ||
     selectedAdGroupIds.length > 0 ||
+    linkedAppIds.length > 0 ||
+    linkedCampaignIds.length > 0 ||
+    linkedAdGroupIds.length > 0 ||
     Object.values(entityFilters).some(Boolean);
 
   const clearAll = () => {
@@ -112,6 +173,9 @@ export default function App() {
     setSelectedCampaignIds([]);
     setSelectedAppIds([]);
     setSelectedAdGroupIds([]);
+    setLinkedAppIds([]);
+    setLinkedCampaignIds([]);
+    setLinkedAdGroupIds([]);
   };
 
   return (
@@ -126,6 +190,29 @@ export default function App() {
 
         <div className="px-6 py-4">
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+            <div className="flex items-center gap-1 px-4 pt-2 border-b border-gray-100">
+              <button
+                onClick={() => setActiveTab('history')}
+                className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors ${
+                  activeTab === 'history'
+                    ? 'border-blue-600 text-blue-700'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                Change History
+              </button>
+              <button
+                onClick={() => setActiveTab('linked')}
+                className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors ${
+                  activeTab === 'linked'
+                    ? 'border-blue-600 text-blue-700'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                App / Campaign / Ad Group
+              </button>
+            </div>
+
             <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100">
               <AgentFilterDropdown selected={selectedAgents} onChange={setSelectedAgents} />
               <ActivityFilterDropdown selected={selectedActivities} onChange={setSelectedActivities} />
@@ -142,25 +229,46 @@ export default function App() {
               </div>
             </div>
 
-            <div className="flex items-center gap-1 px-4 py-2.5 border-b border-gray-100 bg-gray-50/50">
-              <EntityTypeFilter
-                entityFilters={entityFilters as Record<string, string>}
-                onEntityFilterChange={handleEntityFilterChange}
-                activeType={activeEntityType}
-                onActiveTypeChange={setActiveEntityType}
-                counts={typeCounts}
-                selectedCampaigns={selectedCampaignIds}
-                onCampaignsChange={handleCampaignsChange}
-                groupApps={selectedGroup.apps}
-                selectedApps={selectedAppIds}
-                onAppsChange={setSelectedAppIds}
-                groupCampaigns={selectedGroup.campaigns}
-                selectedAdGroups={selectedAdGroupIds}
-                onAdGroupsChange={setSelectedAdGroupIds}
-              />
-            </div>
+            {activeTab === 'history' ? (
+              <>
+                <div className="flex items-center gap-1 px-4 py-2.5 border-b border-gray-100 bg-gray-50/50">
+                  <EntityTypeFilter
+                    entityFilters={entityFilters as Record<string, string>}
+                    onEntityFilterChange={handleEntityFilterChange}
+                    activeType={activeEntityType}
+                    onActiveTypeChange={setActiveEntityType}
+                    counts={typeCounts}
+                    selectedCampaigns={selectedCampaignIds}
+                    onCampaignsChange={handleCampaignsChange}
+                    groupApps={selectedGroup.apps}
+                    selectedApps={selectedAppIds}
+                    onAppsChange={setSelectedAppIds}
+                    groupCampaigns={selectedGroup.campaigns}
+                    selectedAdGroups={selectedAdGroupIds}
+                    onAdGroupsChange={setSelectedAdGroupIds}
+                  />
+                </div>
 
-            <ChangeHistoryTable data={filtered} />
+                <ChangeHistoryTable data={filtered} />
+              </>
+            ) : (
+              <>
+                <div className="flex items-center gap-1 px-4 py-2.5 border-b border-gray-100 bg-gray-50/50">
+                  <LinkedEntityFilters
+                    apps={selectedGroup.apps}
+                    campaigns={selectedGroup.campaigns}
+                    selectedApps={linkedAppIds}
+                    onAppsChange={handleLinkedAppsChange}
+                    selectedCampaigns={linkedCampaignIds}
+                    onCampaignsChange={handleLinkedCampaignsChange}
+                    selectedAdGroups={linkedAdGroupIds}
+                    onAdGroupsChange={setLinkedAdGroupIds}
+                  />
+                </div>
+
+                <ChangeHistoryTable data={linkedFiltered} />
+              </>
+            )}
           </div>
         </div>
       </div>

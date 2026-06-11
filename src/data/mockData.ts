@@ -130,6 +130,7 @@ export interface Campaign {
   id: string;
   name: string;
   status: 'active' | 'paused';
+  appId: string;
   adGroups: AdGroup[];
 }
 
@@ -164,25 +165,25 @@ export const campaignGroups: CampaignGroupInfo[] = [
       { id: 'a3', name: 'Quick Hit Slots Casino',     platform: 'iOS',     iconGradient: 'from-rose-500 to-pink-600',     iconLetter: 'Q' },
     ],
     campaigns: [
-      { id: 'c1', name: 'Casino_US_Brand', status: 'active', adGroups: [
+      { id: 'c1', name: 'Casino_US_Brand', status: 'active', appId: 'a1', adGroups: [
         { id: 'ag1',  name: 'us_slots_exact_match_brand_terms' },
         { id: 'ag2',  name: 'us_casino_competitor_broad_match' },
         { id: 'ag3',  name: 'us_jackpot_high_intent_search_queries' },
         { id: 'ag4',  name: 'us_casino_phrase_match_general_terms' },
       ]},
-      { id: 'c2', name: 'Casino_EU_Broad', status: 'paused', adGroups: [
+      { id: 'c2', name: 'Casino_EU_Broad', status: 'paused', appId: 'a2', adGroups: [
         { id: 'ag5',  name: 'eu_casino_broad_keywords_general' },
         { id: 'ag6',  name: 'eu_slots_phrase_match_international' },
       ]},
-      { id: 'c3', name: 'Casino_Slots_Retargeting', status: 'active', adGroups: [
+      { id: 'c3', name: 'Casino_Slots_Retargeting', status: 'active', appId: 'a3', adGroups: [
         { id: 'ag7',  name: 'retargeting_lapsed_users_7days' },
         { id: 'ag8',  name: 'retargeting_high_value_lookalike' },
       ]},
-      { id: 'c4', name: 'Casino_High_Value_Users', status: 'active', adGroups: [
+      { id: 'c4', name: 'Casino_High_Value_Users', status: 'active', appId: 'a1', adGroups: [
         { id: 'ag9',  name: 'vip_exact_match_core_terms' },
         { id: 'ag10', name: 'whale_audience_broad_targeting' },
       ]},
-      { id: 'c5', name: 'Casino_UK_Exact', status: 'paused', adGroups: [
+      { id: 'c5', name: 'Casino_UK_Exact', status: 'paused', appId: 'a2', adGroups: [
         { id: 'ag11', name: 'uk_brand_exact_core_casino_terms' },
         { id: 'ag12', name: 'uk_slots_exact_competitor_keywords' },
       ]},
@@ -200,20 +201,20 @@ export const campaignGroups: CampaignGroupInfo[] = [
       { id: 'a6', name: '88 Fortunes Slots',            platform: 'Android', iconGradient: 'from-red-500 to-rose-600',      iconLetter: '8' },
     ],
     campaigns: [
-      { id: 'c6', name: 'Android_US_Brand', status: 'active', adGroups: [
+      { id: 'c6', name: 'Android_US_Brand', status: 'active', appId: 'a4', adGroups: [
         { id: 'ag13', name: 'android_us_brand_exact_match' },
         { id: 'ag14', name: 'android_us_competitor_broad_match' },
         { id: 'ag15', name: 'android_us_slots_high_intent' },
       ]},
-      { id: 'c7', name: 'Android_Broad_Match', status: 'paused', adGroups: [
+      { id: 'c7', name: 'Android_Broad_Match', status: 'paused', appId: 'a5', adGroups: [
         { id: 'ag16', name: 'android_broad_casino_general_terms' },
         { id: 'ag17', name: 'android_broad_slots_phrase_match' },
       ]},
-      { id: 'c8', name: 'Android_Remarketing', status: 'active', adGroups: [
+      { id: 'c8', name: 'Android_Remarketing', status: 'active', appId: 'a6', adGroups: [
         { id: 'ag18', name: 'android_retargeting_lapsed_30days' },
         { id: 'ag19', name: 'android_retargeting_vip_users_exact' },
       ]},
-      { id: 'c9', name: 'Android_Competitor_KW', status: 'active', adGroups: [
+      { id: 'c9', name: 'Android_Competitor_KW', status: 'active', appId: 'a4', adGroups: [
         { id: 'ag20', name: 'android_competitor_brand_exact' },
         { id: 'ag21', name: 'android_competitor_generic_broad' },
       ]},
@@ -231,19 +232,19 @@ export const campaignGroups: CampaignGroupInfo[] = [
       { id: 'a9', name: 'Jackpot Party EU', platform: 'iOS & Android', iconGradient: 'from-orange-400 to-amber-500',  iconLetter: 'J' },
     ],
     campaigns: [
-      { id: 'c10', name: 'EU_Brand_iOS', status: 'active', adGroups: [
+      { id: 'c10', name: 'EU_Brand_iOS', status: 'active', appId: 'a9', adGroups: [
         { id: 'ag22', name: 'eu_ios_brand_exact_match_terms' },
         { id: 'ag23', name: 'eu_ios_slots_phrase_match_broad' },
       ]},
-      { id: 'c11', name: 'EU_Retargeting', status: 'active', adGroups: [
+      { id: 'c11', name: 'EU_Retargeting', status: 'active', appId: 'a7', adGroups: [
         { id: 'ag24', name: 'eu_retargeting_lapsed_users_14days' },
         { id: 'ag25', name: 'eu_retargeting_high_value_exact' },
       ]},
-      { id: 'c12', name: 'UK_Exact_Match', status: 'paused', adGroups: [
+      { id: 'c12', name: 'UK_Exact_Match', status: 'paused', appId: 'a8', adGroups: [
         { id: 'ag26', name: 'uk_brand_exact_core_terms' },
         { id: 'ag27', name: 'uk_casino_exact_competitor_kw' },
       ]},
-      { id: 'c13', name: 'DE_Broad_Search', status: 'active', adGroups: [
+      { id: 'c13', name: 'DE_Broad_Search', status: 'active', appId: 'a7', adGroups: [
         { id: 'ag28', name: 'de_broad_casino_german_keywords' },
         { id: 'ag29', name: 'de_broad_slots_general_terms' },
       ]},
