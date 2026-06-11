@@ -53,6 +53,18 @@ export default function App() {
     setEntityFilters(prev => ({ ...prev, [type]: value }));
   };
 
+  // App -> Campaign -> Ad Group cascade for the dependent filters tab
+  const handleLinkedAppsChange = (ids: string[]) => {
+    setLinkedAppIds(ids);
+    setLinkedCampaignIds([]);
+    setLinkedAdGroupIds([]);
+  };
+
+  const handleLinkedCampaignsChange = (ids: string[]) => {
+    setLinkedCampaignIds(ids);
+    setLinkedAdGroupIds([]);
+  };
+
   const handleLinkedEntityFilterChange = (type: ChangeType, value: string) => {
     setLinkedEntityFilters(prev => ({ ...prev, [type]: value }));
   };
@@ -128,25 +140,17 @@ export default function App() {
     });
   }, [matchesCommonFilters, dateRange, entityFilters, selectedCampaignIds, selectedAppIds, selectedGroup]);
 
-  // App, Campaign and Ad Group filters act independently of each other
+  // App -> Campaign -> Ad Group cascading filters for the dependent filters tab
   const linkedFiltered = useMemo(() => {
-    const allAdGroups = selectedGroup.campaigns.flatMap(c => c.adGroups);
+    const effectiveCampaigns = linkedCampaignIds.length > 0
+      ? selectedGroup.campaigns.filter(c => linkedCampaignIds.includes(c.id))
+      : linkedAppIds.length > 0
+      ? selectedGroup.campaigns.filter(c => linkedAppIds.includes(c.appId))
+      : selectedGroup.campaigns;
 
-    const appCampaignNames = linkedAppIds.length > 0
-      ? selectedGroup.campaigns.filter(c => linkedAppIds.includes(c.appId)).map(c => c.name.toLowerCase())
-      : null;
-
-    const appAdGroupNames = linkedAppIds.length > 0
-      ? selectedGroup.campaigns.filter(c => linkedAppIds.includes(c.appId)).flatMap(c => c.adGroups).map(ag => ag.name.toLowerCase())
-      : null;
-
-    const campaignNames = linkedCampaignIds.length > 0
-      ? selectedGroup.campaigns.filter(c => linkedCampaignIds.includes(c.id)).map(c => c.name.toLowerCase())
-      : null;
-
-    const adGroupNames = linkedAdGroupIds.length > 0
-      ? allAdGroups.filter(ag => linkedAdGroupIds.includes(ag.id)).map(ag => ag.name.toLowerCase())
-      : null;
+    const effectiveAdGroups = linkedAdGroupIds.length > 0
+      ? effectiveCampaigns.flatMap(c => c.adGroups).filter(ag => linkedAdGroupIds.includes(ag.id))
+      : effectiveCampaigns.flatMap(c => c.adGroups);
 
     return mockData.filter(row => {
       if (!matchesCommonFilters(row)) return false;
@@ -154,14 +158,14 @@ export default function App() {
 
       const entityLower = row.entityName?.toLowerCase() ?? '';
 
-      if (row.type === 'Campaign') {
-        if (appCampaignNames && !appCampaignNames.some(n => entityLower.includes(n) || n.includes(entityLower))) return false;
-        if (campaignNames && !campaignNames.some(n => entityLower.includes(n) || n.includes(entityLower))) return false;
+      if (row.type === 'Campaign' && (linkedAppIds.length > 0 || linkedCampaignIds.length > 0)) {
+        const names = effectiveCampaigns.map(c => c.name.toLowerCase());
+        if (!names.some(n => entityLower.includes(n) || n.includes(entityLower))) return false;
       }
 
-      if (row.type === 'Ad Group') {
-        if (appAdGroupNames && !appAdGroupNames.some(n => entityLower.includes(n) || n.includes(entityLower))) return false;
-        if (adGroupNames && !adGroupNames.some(n => entityLower.includes(n) || n.includes(entityLower))) return false;
+      if (row.type === 'Ad Group' && (linkedAppIds.length > 0 || linkedCampaignIds.length > 0 || linkedAdGroupIds.length > 0)) {
+        const names = effectiveAdGroups.map(ag => ag.name.toLowerCase());
+        if (!names.some(n => entityLower.includes(n) || n.includes(entityLower))) return false;
       }
 
       for (const [type, search] of Object.entries(linkedEntityFilters)) {
@@ -287,9 +291,9 @@ export default function App() {
                     apps={selectedGroup.apps}
                     campaigns={selectedGroup.campaigns}
                     selectedApps={linkedAppIds}
-                    onAppsChange={setLinkedAppIds}
+                    onAppsChange={handleLinkedAppsChange}
                     selectedCampaigns={linkedCampaignIds}
-                    onCampaignsChange={setLinkedCampaignIds}
+                    onCampaignsChange={handleLinkedCampaignsChange}
                     selectedAdGroups={linkedAdGroupIds}
                     onAdGroupsChange={setLinkedAdGroupIds}
                     entityFilters={linkedEntityFilters as Record<string, string>}
