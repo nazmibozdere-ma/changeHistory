@@ -1,9 +1,16 @@
 import { useState, useRef, useEffect } from 'react';
 import { ChevronDownIcon, ChevronUpIcon } from './icons';
-import type { AppInfo, Campaign } from '../data/mockData';
+import type { AppInfo, Campaign, ChangeType } from '../data/mockData';
 import AppSelectorDropdown from './AppSelectorDropdown';
 import CampaignSelectorModal from './CampaignSelectorModal';
 import AdGroupSelectorDropdown from './AdGroupSelectorDropdown';
+import EntitySearchFilter from './EntitySearchFilter';
+
+interface EntityFilterState {
+  [key: string]: string;
+}
+
+const simpleSearchTypes: ChangeType[] = ['Keyword', 'Negative Keyword', 'Ad'];
 
 interface LinkedEntityFiltersProps {
   apps: AppInfo[];
@@ -14,6 +21,8 @@ interface LinkedEntityFiltersProps {
   onCampaignsChange: (ids: string[]) => void;
   selectedAdGroups: string[];
   onAdGroupsChange: (ids: string[]) => void;
+  entityFilters: EntityFilterState;
+  onEntityFilterChange: (type: ChangeType, value: string) => void;
 }
 
 export default function LinkedEntityFilters({
@@ -25,6 +34,8 @@ export default function LinkedEntityFilters({
   onCampaignsChange,
   selectedAdGroups,
   onAdGroupsChange,
+  entityFilters,
+  onEntityFilterChange,
 }: LinkedEntityFiltersProps) {
   const [campaignOpen, setCampaignOpen] = useState(false);
   const [adGroupOpen, setAdGroupOpen] = useState(false);
@@ -106,6 +117,16 @@ export default function LinkedEntityFilters({
           />
         )}
       </div>
+
+      {/* Keyword / Negative Keyword / Ad text-search filters */}
+      {simpleSearchTypes.map(type => (
+        <EntitySearchFilter
+          key={type}
+          type={type}
+          value={entityFilters[type] || ''}
+          onChange={value => onEntityFilterChange(type, value)}
+        />
+      ))}
     </div>
   );
 }

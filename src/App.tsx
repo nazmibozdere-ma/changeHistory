@@ -19,7 +19,6 @@ export default function App() {
   const [selectedAgents, setSelectedAgents] = useState<string[]>([]);
   const [selectedActivities, setSelectedActivities] = useState<string[]>([]);
   const [entityFilters, setEntityFilters] = useState<EntityFilterMap>({});
-  const [activeEntityType, setActiveEntityType] = useState<ChangeType | null>(null);
   const [selectedCampaignIds, setSelectedCampaignIds] = useState<string[]>([]);
   const [selectedAppIds, setSelectedAppIds] = useState<string[]>([]);
   const [selectedAdGroupIds, setSelectedAdGroupIds] = useState<string[]>([]);
@@ -38,6 +37,7 @@ export default function App() {
     start: null,
     end: null,
   });
+  const [linkedEntityFilters, setLinkedEntityFilters] = useState<EntityFilterMap>({});
 
   const handleGroupChange = (group: CampaignGroupInfo) => {
     setSelectedGroup(group);
@@ -51,6 +51,10 @@ export default function App() {
 
   const handleEntityFilterChange = (type: ChangeType, value: string) => {
     setEntityFilters(prev => ({ ...prev, [type]: value }));
+  };
+
+  const handleLinkedEntityFilterChange = (type: ChangeType, value: string) => {
+    setLinkedEntityFilters(prev => ({ ...prev, [type]: value }));
   };
 
   const matchesDateRange = (row: ChangeRecord, range: { start: Date | null; end: Date | null }) => {
@@ -160,9 +164,19 @@ export default function App() {
         if (adGroupNames && !adGroupNames.some(n => entityLower.includes(n) || n.includes(entityLower))) return false;
       }
 
+      for (const [type, search] of Object.entries(linkedEntityFilters)) {
+        if (!search) continue;
+        if (row.type === type) {
+          const term = search.toLowerCase();
+          const inActivity = row.activity.toLowerCase().includes(term);
+          const inEntity = row.entityName?.toLowerCase().includes(term) ?? false;
+          if (!inActivity && !inEntity) return false;
+        }
+      }
+
       return true;
     });
-  }, [matchesCommonFilters, linkedDateRange, selectedGroup, linkedAppIds, linkedCampaignIds, linkedAdGroupIds]);
+  }, [matchesCommonFilters, linkedDateRange, linkedEntityFilters, selectedGroup, linkedAppIds, linkedCampaignIds, linkedAdGroupIds]);
 
   const hasActiveFilters =
     selectedAgents.length > 0 ||
@@ -175,7 +189,8 @@ export default function App() {
     linkedAdGroupIds.length > 0 ||
     linkedDateRange.start !== null ||
     linkedDateRange.end !== null ||
-    Object.values(entityFilters).some(Boolean);
+    Object.values(entityFilters).some(Boolean) ||
+    Object.values(linkedEntityFilters).some(Boolean);
 
   const clearAll = () => {
     setSelectedAgents([]);
@@ -188,6 +203,7 @@ export default function App() {
     setLinkedCampaignIds([]);
     setLinkedAdGroupIds([]);
     setLinkedDateRange({ start: null, end: null });
+    setLinkedEntityFilters({});
   };
 
   return (
@@ -251,8 +267,6 @@ export default function App() {
                   <EntityTypeFilter
                     entityFilters={entityFilters as Record<string, string>}
                     onEntityFilterChange={handleEntityFilterChange}
-                    activeType={activeEntityType}
-                    onActiveTypeChange={setActiveEntityType}
                     selectedCampaigns={selectedCampaignIds}
                     onCampaignsChange={setSelectedCampaignIds}
                     groupApps={selectedGroup.apps}
@@ -278,6 +292,8 @@ export default function App() {
                     onCampaignsChange={setLinkedCampaignIds}
                     selectedAdGroups={linkedAdGroupIds}
                     onAdGroupsChange={setLinkedAdGroupIds}
+                    entityFilters={linkedEntityFilters as Record<string, string>}
+                    onEntityFilterChange={handleLinkedEntityFilterChange}
                   />
                 </div>
 
