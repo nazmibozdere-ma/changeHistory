@@ -24,8 +24,8 @@ export default function App() {
   const [selectedAppIds, setSelectedAppIds] = useState<string[]>([]);
   const [selectedAdGroupIds, setSelectedAdGroupIds] = useState<string[]>([]);
   const [dateRange, setDateRange] = useState<{ start: Date | null; end: Date | null }>({
-    start: new Date(2026, 3, 1),  // Apr 1 2026
-    end:   new Date(2026, 3, 6),  // Apr 6 2026
+    start: null,
+    end: null,
   });
 
   const [activeTab, setActiveTab] = useState<'history' | 'linked'>('history');
@@ -41,12 +41,6 @@ export default function App() {
     setLinkedAppIds([]);
     setLinkedCampaignIds([]);
     setLinkedAdGroupIds([]);
-  };
-
-  // When campaign selection changes, clear ad group selection
-  const handleCampaignsChange = (ids: string[]) => {
-    setSelectedCampaignIds(ids);
-    setSelectedAdGroupIds([]);
   };
 
   // App -> Campaign -> Ad Group cascade for the linked filters tab
@@ -239,7 +233,7 @@ export default function App() {
                     onActiveTypeChange={setActiveEntityType}
                     counts={typeCounts}
                     selectedCampaigns={selectedCampaignIds}
-                    onCampaignsChange={handleCampaignsChange}
+                    onCampaignsChange={setSelectedCampaignIds}
                     groupApps={selectedGroup.apps}
                     selectedApps={selectedAppIds}
                     onAppsChange={setSelectedAppIds}

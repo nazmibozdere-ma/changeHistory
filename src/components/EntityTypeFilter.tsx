@@ -89,11 +89,6 @@ export default function EntityTypeFilter({
         const isAdGroup   = type === 'Ad Group';
         const isSpecial   = isCampaign || isAdGroup;
 
-        // Campaigns shown in ad group selector: if some campaigns selected, only those; else all
-        const adGroupCampaigns = selectedCampaigns.length > 0
-          ? groupCampaigns.filter(c => selectedCampaigns.includes(c.id))
-          : groupCampaigns;
-
         const count = isCampaign
           ? selectedCampaigns.length || (counts[type] ?? 0)
           : isAdGroup
@@ -183,7 +178,7 @@ export default function EntityTypeFilter({
 
             {isAdGroup && adGroupOpen && (
               <AdGroupSelectorDropdown
-                campaigns={adGroupCampaigns}
+                campaigns={groupCampaigns}
                 selected={selectedAdGroups}
                 onConfirm={ids => { onAdGroupsChange(ids); setAdGroupOpen(false); }}
                 onCancel={() => setAdGroupOpen(false)}
