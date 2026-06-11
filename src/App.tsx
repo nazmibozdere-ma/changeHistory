@@ -83,16 +83,32 @@ export default function App() {
   }, [selectedAgents, selectedActivities]);
 
   const filtered = useMemo(() => {
+    const appCampaignNames = selectedAppIds.length > 0
+      ? selectedGroup.campaigns.filter(c => selectedAppIds.includes(c.appId)).map(c => c.name.toLowerCase())
+      : null;
+
+    const appAdGroupNames = selectedAppIds.length > 0
+      ? selectedGroup.campaigns.filter(c => selectedAppIds.includes(c.appId)).flatMap(c => c.adGroups).map(ag => ag.name.toLowerCase())
+      : null;
+
     return mockData.filter(row => {
       if (!matchesCommonFilters(row)) return false;
       if (!matchesDateRange(row, dateRange)) return false;
 
-      if (selectedCampaignIds.length > 0 && row.type === 'Campaign') {
-        const selectedNames = selectedGroup.campaigns
-          .filter(c => selectedCampaignIds.includes(c.id))
-          .map(c => c.name.toLowerCase());
-        const entityLower = row.entityName?.toLowerCase() ?? '';
-        if (!selectedNames.some(n => entityLower.includes(n) || n.includes(entityLower))) return false;
+      const entityLower = row.entityName?.toLowerCase() ?? '';
+
+      if (row.type === 'Campaign') {
+        if (appCampaignNames && !appCampaignNames.some(n => entityLower.includes(n) || n.includes(entityLower))) return false;
+        if (selectedCampaignIds.length > 0) {
+          const selectedNames = selectedGroup.campaigns
+            .filter(c => selectedCampaignIds.includes(c.id))
+            .map(c => c.name.toLowerCase());
+          if (!selectedNames.some(n => entityLower.includes(n) || n.includes(entityLower))) return false;
+        }
+      }
+
+      if (row.type === 'Ad Group') {
+        if (appAdGroupNames && !appAdGroupNames.some(n => entityLower.includes(n) || n.includes(entityLower))) return false;
       }
 
       for (const [type, search] of Object.entries(entityFilters)) {
@@ -106,7 +122,7 @@ export default function App() {
       }
       return true;
     });
-  }, [matchesCommonFilters, dateRange, entityFilters, selectedCampaignIds, selectedGroup]);
+  }, [matchesCommonFilters, dateRange, entityFilters, selectedCampaignIds, selectedAppIds, selectedGroup]);
 
   // App, Campaign and Ad Group filters act independently of each other
   const linkedFiltered = useMemo(() => {
