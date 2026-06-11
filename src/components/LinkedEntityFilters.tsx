@@ -41,16 +41,6 @@ export default function LinkedEntityFilters({
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  // Campaign options narrow down to the selected app(s)
-  const campaignsForApps = selectedApps.length > 0
-    ? campaigns.filter(c => selectedApps.includes(c.appId))
-    : campaigns;
-
-  // Ad group options narrow down further to the selected campaign(s)
-  const campaignsForAdGroups = selectedCampaigns.length > 0
-    ? campaignsForApps.filter(c => selectedCampaigns.includes(c.id))
-    : campaignsForApps;
-
   return (
     <div className="flex items-center gap-1 relative" ref={ref}>
       <AppSelectorDropdown apps={apps} selected={selectedApps} onChange={onAppsChange} />
@@ -78,7 +68,7 @@ export default function LinkedEntityFilters({
 
         {campaignOpen && (
           <CampaignSelectorModal
-            campaigns={campaignsForApps}
+            campaigns={campaigns}
             selected={selectedCampaigns}
             onConfirm={ids => { onCampaignsChange(ids); setCampaignOpen(false); }}
             onCancel={() => setCampaignOpen(false)}
@@ -109,7 +99,7 @@ export default function LinkedEntityFilters({
 
         {adGroupOpen && (
           <AdGroupSelectorDropdown
-            campaigns={campaignsForAdGroups}
+            campaigns={campaigns}
             selected={selectedAdGroups}
             onConfirm={ids => { onAdGroupsChange(ids); setAdGroupOpen(false); }}
             onCancel={() => setAdGroupOpen(false)}

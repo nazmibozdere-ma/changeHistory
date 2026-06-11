@@ -23,15 +23,21 @@ export default function App() {
   const [selectedCampaignIds, setSelectedCampaignIds] = useState<string[]>([]);
   const [selectedAppIds, setSelectedAppIds] = useState<string[]>([]);
   const [selectedAdGroupIds, setSelectedAdGroupIds] = useState<string[]>([]);
-  const [dateRange, setDateRange] = useState<{ start: Date | null; end: Date | null }>({
-    start: null,
-    end: null,
+  const [dateRange, setDateRange] = useState<{ start: Date | null; end: Date | null }>(() => {
+    const end = new Date();
+    const start = new Date();
+    start.setDate(start.getDate() - 30);
+    return { start, end };
   });
 
   const [activeTab, setActiveTab] = useState<'history' | 'linked'>('history');
   const [linkedAppIds, setLinkedAppIds] = useState<string[]>([]);
   const [linkedCampaignIds, setLinkedCampaignIds] = useState<string[]>([]);
   const [linkedAdGroupIds, setLinkedAdGroupIds] = useState<string[]>([]);
+  const [linkedDateRange, setLinkedDateRange] = useState<{ start: Date | null; end: Date | null }>({
+    start: null,
+    end: null,
+  });
 
   const handleGroupChange = (group: CampaignGroupInfo) => {
     setSelectedGroup(group);
@@ -43,29 +49,20 @@ export default function App() {
     setLinkedAdGroupIds([]);
   };
 
-  // App -> Campaign -> Ad Group cascade for the linked filters tab
-  const handleLinkedAppsChange = (ids: string[]) => {
-    setLinkedAppIds(ids);
-    setLinkedCampaignIds([]);
-    setLinkedAdGroupIds([]);
-  };
-
-  const handleLinkedCampaignsChange = (ids: string[]) => {
-    setLinkedCampaignIds(ids);
-    setLinkedAdGroupIds([]);
-  };
-
   const handleEntityFilterChange = (type: ChangeType, value: string) => {
     setEntityFilters(prev => ({ ...prev, [type]: value }));
   };
 
-  const matchesCommonFilters = useCallback((row: ChangeRecord) => {
-    if (dateRange.start && row.date < dateRange.start) return false;
-    if (dateRange.end) {
-      const endOfDay = new Date(dateRange.end.getFullYear(), dateRange.end.getMonth(), dateRange.end.getDate(), 23, 59, 59, 999);
+  const matchesDateRange = (row: ChangeRecord, range: { start: Date | null; end: Date | null }) => {
+    if (range.start && row.date < range.start) return false;
+    if (range.end) {
+      const endOfDay = new Date(range.end.getFullYear(), range.end.getMonth(), range.end.getDate(), 23, 59, 59, 999);
       if (row.date > endOfDay) return false;
     }
+    return true;
+  };
 
+  const matchesCommonFilters = useCallback((row: ChangeRecord) => {
     if (selectedAgents.length > 0 && !selectedAgents.some(f => agentMatchesFilter(row.agent, f))) return false;
 
     if (selectedActivities.length > 0) {
@@ -83,11 +80,12 @@ export default function App() {
     }
 
     return true;
-  }, [dateRange, selectedAgents, selectedActivities]);
+  }, [selectedAgents, selectedActivities]);
 
   const filtered = useMemo(() => {
     return mockData.filter(row => {
       if (!matchesCommonFilters(row)) return false;
+      if (!matchesDateRange(row, dateRange)) return false;
 
       if (selectedCampaignIds.length > 0 && row.type === 'Campaign') {
         const selectedNames = selectedGroup.campaigns
@@ -108,38 +106,47 @@ export default function App() {
       }
       return true;
     });
-  }, [matchesCommonFilters, entityFilters, selectedCampaignIds, selectedGroup]);
+  }, [matchesCommonFilters, dateRange, entityFilters, selectedCampaignIds, selectedGroup]);
 
-  // App -> Campaign -> Ad Group cascading filters for the linked filters tab
+  // App, Campaign and Ad Group filters act independently of each other
   const linkedFiltered = useMemo(() => {
-    const effectiveCampaigns = linkedCampaignIds.length > 0
-      ? selectedGroup.campaigns.filter(c => linkedCampaignIds.includes(c.id))
-      : linkedAppIds.length > 0
-      ? selectedGroup.campaigns.filter(c => linkedAppIds.includes(c.appId))
-      : selectedGroup.campaigns;
+    const allAdGroups = selectedGroup.campaigns.flatMap(c => c.adGroups);
 
-    const effectiveAdGroups = linkedAdGroupIds.length > 0
-      ? effectiveCampaigns.flatMap(c => c.adGroups).filter(ag => linkedAdGroupIds.includes(ag.id))
-      : effectiveCampaigns.flatMap(c => c.adGroups);
+    const appCampaignNames = linkedAppIds.length > 0
+      ? selectedGroup.campaigns.filter(c => linkedAppIds.includes(c.appId)).map(c => c.name.toLowerCase())
+      : null;
+
+    const appAdGroupNames = linkedAppIds.length > 0
+      ? selectedGroup.campaigns.filter(c => linkedAppIds.includes(c.appId)).flatMap(c => c.adGroups).map(ag => ag.name.toLowerCase())
+      : null;
+
+    const campaignNames = linkedCampaignIds.length > 0
+      ? selectedGroup.campaigns.filter(c => linkedCampaignIds.includes(c.id)).map(c => c.name.toLowerCase())
+      : null;
+
+    const adGroupNames = linkedAdGroupIds.length > 0
+      ? allAdGroups.filter(ag => linkedAdGroupIds.includes(ag.id)).map(ag => ag.name.toLowerCase())
+      : null;
 
     return mockData.filter(row => {
       if (!matchesCommonFilters(row)) return false;
+      if (!matchesDateRange(row, linkedDateRange)) return false;
 
       const entityLower = row.entityName?.toLowerCase() ?? '';
 
-      if (row.type === 'Campaign' && (linkedAppIds.length > 0 || linkedCampaignIds.length > 0)) {
-        const names = effectiveCampaigns.map(c => c.name.toLowerCase());
-        if (!names.some(n => entityLower.includes(n) || n.includes(entityLower))) return false;
+      if (row.type === 'Campaign') {
+        if (appCampaignNames && !appCampaignNames.some(n => entityLower.includes(n) || n.includes(entityLower))) return false;
+        if (campaignNames && !campaignNames.some(n => entityLower.includes(n) || n.includes(entityLower))) return false;
       }
 
-      if (row.type === 'Ad Group' && (linkedAppIds.length > 0 || linkedCampaignIds.length > 0 || linkedAdGroupIds.length > 0)) {
-        const names = effectiveAdGroups.map(ag => ag.name.toLowerCase());
-        if (!names.some(n => entityLower.includes(n) || n.includes(entityLower))) return false;
+      if (row.type === 'Ad Group') {
+        if (appAdGroupNames && !appAdGroupNames.some(n => entityLower.includes(n) || n.includes(entityLower))) return false;
+        if (adGroupNames && !adGroupNames.some(n => entityLower.includes(n) || n.includes(entityLower))) return false;
       }
 
       return true;
     });
-  }, [matchesCommonFilters, selectedGroup, linkedAppIds, linkedCampaignIds, linkedAdGroupIds]);
+  }, [matchesCommonFilters, linkedDateRange, selectedGroup, linkedAppIds, linkedCampaignIds, linkedAdGroupIds]);
 
   const typeCounts = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -158,6 +165,8 @@ export default function App() {
     linkedAppIds.length > 0 ||
     linkedCampaignIds.length > 0 ||
     linkedAdGroupIds.length > 0 ||
+    linkedDateRange.start !== null ||
+    linkedDateRange.end !== null ||
     Object.values(entityFilters).some(Boolean);
 
   const clearAll = () => {
@@ -170,6 +179,7 @@ export default function App() {
     setLinkedAppIds([]);
     setLinkedCampaignIds([]);
     setLinkedAdGroupIds([]);
+    setLinkedDateRange({ start: null, end: null });
   };
 
   return (
@@ -219,7 +229,11 @@ export default function App() {
                     Clear all filters
                   </button>
                 )}
-                <DateRangePicker value={dateRange} onChange={setDateRange} />
+                {activeTab === 'history' ? (
+                  <DateRangePicker value={dateRange} onChange={setDateRange} />
+                ) : (
+                  <DateRangePicker value={linkedDateRange} onChange={setLinkedDateRange} />
+                )}
               </div>
             </div>
 
@@ -252,9 +266,9 @@ export default function App() {
                     apps={selectedGroup.apps}
                     campaigns={selectedGroup.campaigns}
                     selectedApps={linkedAppIds}
-                    onAppsChange={handleLinkedAppsChange}
+                    onAppsChange={setLinkedAppIds}
                     selectedCampaigns={linkedCampaignIds}
-                    onCampaignsChange={handleLinkedCampaignsChange}
+                    onCampaignsChange={setLinkedCampaignIds}
                     selectedAdGroups={linkedAdGroupIds}
                     onAdGroupsChange={setLinkedAdGroupIds}
                   />
