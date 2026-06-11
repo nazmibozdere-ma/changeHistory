@@ -148,14 +148,6 @@ export default function App() {
     });
   }, [matchesCommonFilters, linkedDateRange, selectedGroup, linkedAppIds, linkedCampaignIds, linkedAdGroupIds]);
 
-  const typeCounts = useMemo(() => {
-    const counts: Record<string, number> = {};
-    filtered.forEach(r => {
-      counts[r.type] = (counts[r.type] ?? 0) + 1;
-    });
-    return counts;
-  }, [filtered]);
-
   const hasActiveFilters =
     selectedAgents.length > 0 ||
     selectedActivities.length > 0 ||
@@ -245,7 +237,6 @@ export default function App() {
                     onEntityFilterChange={handleEntityFilterChange}
                     activeType={activeEntityType}
                     onActiveTypeChange={setActiveEntityType}
-                    counts={typeCounts}
                     selectedCampaigns={selectedCampaignIds}
                     onCampaignsChange={setSelectedCampaignIds}
                     groupApps={selectedGroup.apps}

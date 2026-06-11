@@ -15,7 +15,6 @@ interface EntityTypeFilterProps {
   onEntityFilterChange: (type: ChangeType, value: string) => void;
   activeType: ChangeType | null;
   onActiveTypeChange: (type: ChangeType | null) => void;
-  counts: Record<string, number>;
   selectedCampaigns: string[];
   onCampaignsChange: (ids: string[]) => void;
   groupApps: AppInfo[];
@@ -31,7 +30,6 @@ export default function EntityTypeFilter({
   onEntityFilterChange,
   activeType,
   onActiveTypeChange,
-  counts,
   selectedCampaigns,
   onCampaignsChange,
   groupApps,
@@ -90,9 +88,9 @@ export default function EntityTypeFilter({
         const isSpecial   = isCampaign || isAdGroup;
 
         const count = isCampaign
-          ? selectedCampaigns.length || (counts[type] ?? 0)
+          ? selectedCampaigns.length
           : isAdGroup
-          ? selectedAdGroups.length || (counts[type] ?? 0)
+          ? selectedAdGroups.length
           : 0; // no count badge for simple text-search tabs
 
         const isActive  = activeType === type;
