@@ -25,7 +25,7 @@ export default function App() {
   const [dateRange, setDateRange] = useState<{ start: Date | null; end: Date | null }>(() => {
     const end = new Date();
     const start = new Date();
-    start.setDate(start.getDate() - 7);
+    start.setDate(start.getDate() - 30);
     return { start, end };
   });
 
@@ -36,7 +36,7 @@ export default function App() {
   const [linkedDateRange, setLinkedDateRange] = useState<{ start: Date | null; end: Date | null }>(() => {
     const end = new Date();
     const start = new Date();
-    start.setDate(start.getDate() - 7);
+    start.setDate(start.getDate() - 30);
     return { start, end };
   });
   const [linkedEntityFilters, setLinkedEntityFilters] = useState<EntityFilterMap>({});
