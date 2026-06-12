@@ -18,9 +18,7 @@ export default function App() {
 
   const [selectedAgents, setSelectedAgents] = useState<string[]>([]);
   const [selectedActivities, setSelectedActivities] = useState<string[]>([]);
-  const [entityFilters, setEntityFilters] = useState<EntityFilterMap>({});
   const [selectedCampaignIds, setSelectedCampaignIds] = useState<string[]>([]);
-  const [selectedAppIds, setSelectedAppIds] = useState<string[]>([]);
   const [selectedAdGroupIds, setSelectedAdGroupIds] = useState<string[]>([]);
   const [dateRange, setDateRange] = useState<{ start: Date | null; end: Date | null }>(() => {
     const end = new Date();
@@ -44,15 +42,10 @@ export default function App() {
   const handleGroupChange = (group: CampaignGroupInfo) => {
     setSelectedGroup(group);
     setSelectedCampaignIds([]);
-    setSelectedAppIds([]);
     setSelectedAdGroupIds([]);
     setLinkedAppIds([]);
     setLinkedCampaignIds([]);
     setLinkedAdGroupIds([]);
-  };
-
-  const handleEntityFilterChange = (type: ChangeType, value: string) => {
-    setEntityFilters(prev => ({ ...prev, [type]: value }));
   };
 
   // App -> Campaign -> Ad Group cascade for the dependent filters tab
@@ -101,46 +94,22 @@ export default function App() {
   }, [selectedAgents, selectedActivities]);
 
   const filtered = useMemo(() => {
-    const appCampaignNames = selectedAppIds.length > 0
-      ? selectedGroup.campaigns.filter(c => selectedAppIds.includes(c.appId)).map(c => c.name.toLowerCase())
-      : null;
-
-    const appAdGroupNames = selectedAppIds.length > 0
-      ? selectedGroup.campaigns.filter(c => selectedAppIds.includes(c.appId)).flatMap(c => c.adGroups).map(ag => ag.name.toLowerCase())
-      : null;
-
     return mockData.filter(row => {
       if (!matchesCommonFilters(row)) return false;
       if (!matchesDateRange(row, dateRange)) return false;
 
       const entityLower = row.entityName?.toLowerCase() ?? '';
 
-      if (row.type === 'Campaign') {
-        if (appCampaignNames && !appCampaignNames.some(n => entityLower.includes(n) || n.includes(entityLower))) return false;
-        if (selectedCampaignIds.length > 0) {
-          const selectedNames = selectedGroup.campaigns
-            .filter(c => selectedCampaignIds.includes(c.id))
-            .map(c => c.name.toLowerCase());
-          if (!selectedNames.some(n => entityLower.includes(n) || n.includes(entityLower))) return false;
-        }
+      if (row.type === 'Campaign' && selectedCampaignIds.length > 0) {
+        const selectedNames = selectedGroup.campaigns
+          .filter(c => selectedCampaignIds.includes(c.id))
+          .map(c => c.name.toLowerCase());
+        if (!selectedNames.some(n => entityLower.includes(n) || n.includes(entityLower))) return false;
       }
 
-      if (row.type === 'Ad Group') {
-        if (appAdGroupNames && !appAdGroupNames.some(n => entityLower.includes(n) || n.includes(entityLower))) return false;
-      }
-
-      for (const [type, search] of Object.entries(entityFilters)) {
-        if (!search) continue;
-        if (row.type === type) {
-          const term = search.toLowerCase();
-          const inActivity = row.activity.toLowerCase().includes(term);
-          const inEntity = row.entityName?.toLowerCase().includes(term) ?? false;
-          if (!inActivity && !inEntity) return false;
-        }
-      }
       return true;
     });
-  }, [matchesCommonFilters, dateRange, entityFilters, selectedCampaignIds, selectedAppIds, selectedGroup]);
+  }, [matchesCommonFilters, dateRange, selectedCampaignIds, selectedGroup]);
 
   // App -> Campaign -> Ad Group cascading filters for the dependent filters tab
   const linkedFiltered = useMemo(() => {
@@ -188,20 +157,16 @@ export default function App() {
     selectedAgents.length > 0 ||
     selectedActivities.length > 0 ||
     selectedCampaignIds.length > 0 ||
-    selectedAppIds.length > 0 ||
     selectedAdGroupIds.length > 0 ||
     linkedAppIds.length > 0 ||
     linkedCampaignIds.length > 0 ||
     linkedAdGroupIds.length > 0 ||
-    Object.values(entityFilters).some(Boolean) ||
     Object.values(linkedEntityFilters).some(Boolean);
 
   const clearAll = () => {
     setSelectedAgents([]);
     setSelectedActivities([]);
-    setEntityFilters({});
     setSelectedCampaignIds([]);
-    setSelectedAppIds([]);
     setSelectedAdGroupIds([]);
     setLinkedAppIds([]);
     setLinkedCampaignIds([]);
@@ -268,13 +233,9 @@ export default function App() {
               <>
                 <div className="flex items-center gap-1 px-4 py-2.5 border-b border-gray-100 bg-gray-50/50">
                   <EntityTypeFilter
-                    entityFilters={entityFilters as Record<string, string>}
-                    onEntityFilterChange={handleEntityFilterChange}
+                    previewApp={selectedGroup.apps[0]}
                     selectedCampaigns={selectedCampaignIds}
                     onCampaignsChange={setSelectedCampaignIds}
-                    groupApps={selectedGroup.apps}
-                    selectedApps={selectedAppIds}
-                    onAppsChange={setSelectedAppIds}
                     groupCampaigns={selectedGroup.campaigns}
                     selectedAdGroups={selectedAdGroupIds}
                     onAdGroupsChange={setSelectedAdGroupIds}

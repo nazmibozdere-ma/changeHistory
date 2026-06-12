@@ -1,39 +1,23 @@
 import { useState, useRef, useEffect } from 'react';
 import { ChevronDownIcon, ChevronUpIcon } from './icons';
-import type { ChangeType, AppInfo, Campaign } from '../data/mockData';
+import type { AppInfo, Campaign } from '../data/mockData';
 import { entityTypes } from '../data/mockData';
 import CampaignSelectorModal from './CampaignSelectorModal';
-import AppSelectorDropdown from './AppSelectorDropdown';
 import AdGroupSelectorDropdown from './AdGroupSelectorDropdown';
-import EntitySearchFilter from './EntitySearchFilter';
-
-interface EntityFilterState {
-  [key: string]: string;
-}
 
 interface EntityTypeFilterProps {
-  entityFilters: EntityFilterState;
-  onEntityFilterChange: (type: ChangeType, value: string) => void;
+  previewApp: AppInfo;
   selectedCampaigns: string[];
   onCampaignsChange: (ids: string[]) => void;
-  groupApps: AppInfo[];
-  selectedApps: string[];
-  onAppsChange: (ids: string[]) => void;
   groupCampaigns: Campaign[];
   selectedAdGroups: string[];
   onAdGroupsChange: (ids: string[]) => void;
 }
 
-const simpleSearchTypes: ChangeType[] = ['Keyword', 'Negative Keyword', 'Ad'];
-
 export default function EntityTypeFilter({
-  entityFilters,
-  onEntityFilterChange,
+  previewApp,
   selectedCampaigns,
   onCampaignsChange,
-  groupApps,
-  selectedApps,
-  onAppsChange,
   groupCampaigns,
   selectedAdGroups,
   onAdGroupsChange,
@@ -55,12 +39,13 @@ export default function EntityTypeFilter({
 
   return (
     <div className="flex items-center gap-1 relative" ref={dropdownRef}>
-      {/* App selector — replaces the simple "App" tab */}
-      <AppSelectorDropdown
-        apps={groupApps}
-        selected={selectedApps}
-        onChange={onAppsChange}
-      />
+      {/* App preview — read-only display of the app in scope */}
+      <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-200 bg-gray-50 text-sm font-medium text-gray-700">
+        <div className={`w-5 h-5 rounded-md bg-gradient-to-br ${previewApp.iconGradient} flex items-center justify-center text-white text-[10px] font-bold shrink-0`}>
+          {previewApp.iconLetter}
+        </div>
+        <span>{previewApp.name}</span>
+      </div>
 
       {/* Campaign + Ad Group tabs */}
       {entityTypes.filter(t => t === 'Campaign' || t === 'Ad Group').map(type => {
@@ -123,16 +108,6 @@ export default function EntityTypeFilter({
           </div>
         );
       })}
-
-      {/* Keyword / Negative Keyword / Ad text-search filters */}
-      {simpleSearchTypes.map(type => (
-        <EntitySearchFilter
-          key={type}
-          type={type}
-          value={entityFilters[type] || ''}
-          onChange={value => onEntityFilterChange(type, value)}
-        />
-      ))}
     </div>
   );
 }
