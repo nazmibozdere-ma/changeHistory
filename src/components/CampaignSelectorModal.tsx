@@ -38,6 +38,9 @@ export default function CampaignSelectorModal({ campaigns, selected, onConfirm, 
 
   const clearAll = () => setDraft([]);
 
+  const selectAll = () =>
+    setDraft(prev => Array.from(new Set([...prev, ...visibleCampaigns.map(c => c.id)])));
+
   return (
     <div className="absolute left-0 top-full mt-1.5 z-50 bg-white border border-gray-200 rounded-xl shadow-lg flex flex-col" style={{ width: '360px', maxHeight: '480px' }}>
 
@@ -118,8 +121,13 @@ export default function CampaignSelectorModal({ campaigns, selected, onConfirm, 
 
         {/* All campaigns */}
         <div>
-          <div className="px-3 py-2">
+          <div className="flex items-center justify-between px-3 py-2">
             <span className="text-xs font-semibold text-gray-500">All Campaigns</span>
+            {visibleCampaigns.length > 0 && (
+              <button onClick={selectAll} className="text-xs text-blue-600 hover:text-blue-700 font-medium transition-colors">
+                Select all
+              </button>
+            )}
           </div>
 
           {visibleCampaigns.length === 0 ? (

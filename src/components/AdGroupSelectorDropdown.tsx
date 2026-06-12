@@ -38,6 +38,11 @@ export default function AdGroupSelectorDropdown({
 
   const clearAll = () => setDraft([]);
 
+  const selectAll = () => {
+    const visibleIds = filteredCampaigns.flatMap(c => c.adGroups.map(ag => ag.id));
+    setDraft(prev => Array.from(new Set([...prev, ...visibleIds])));
+  };
+
   const toggleCampaignCollapse = (campaignId: string) =>
     setCollapsedCampaigns(prev => ({ ...prev, [campaignId]: !prev[campaignId] }));
 
@@ -65,6 +70,15 @@ export default function AdGroupSelectorDropdown({
           )}
         </div>
       </div>
+
+      {filteredCampaigns.length > 0 && (
+        <div className="flex items-center justify-between px-3 py-1.5 border-t border-gray-100">
+          <span className="text-xs font-semibold text-gray-500">All Ad Groups</span>
+          <button onClick={selectAll} className="text-xs text-blue-600 hover:text-blue-700 font-medium transition-colors">
+            Select all
+          </button>
+        </div>
+      )}
 
       <div className="flex-1 overflow-y-auto border-t border-gray-100">
         {/* Selected section */}
