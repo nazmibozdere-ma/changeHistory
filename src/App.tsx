@@ -33,9 +33,11 @@ export default function App() {
   const [linkedAppIds, setLinkedAppIds] = useState<string[]>([]);
   const [linkedCampaignIds, setLinkedCampaignIds] = useState<string[]>([]);
   const [linkedAdGroupIds, setLinkedAdGroupIds] = useState<string[]>([]);
-  const [linkedDateRange, setLinkedDateRange] = useState<{ start: Date | null; end: Date | null }>({
-    start: null,
-    end: null,
+  const [linkedDateRange, setLinkedDateRange] = useState<{ start: Date | null; end: Date | null }>(() => {
+    const end = new Date();
+    const start = new Date();
+    start.setDate(start.getDate() - 30);
+    return { start, end };
   });
   const [linkedEntityFilters, setLinkedEntityFilters] = useState<EntityFilterMap>({});
 
@@ -191,8 +193,6 @@ export default function App() {
     linkedAppIds.length > 0 ||
     linkedCampaignIds.length > 0 ||
     linkedAdGroupIds.length > 0 ||
-    linkedDateRange.start !== null ||
-    linkedDateRange.end !== null ||
     Object.values(entityFilters).some(Boolean) ||
     Object.values(linkedEntityFilters).some(Boolean);
 
@@ -206,7 +206,6 @@ export default function App() {
     setLinkedAppIds([]);
     setLinkedCampaignIds([]);
     setLinkedAdGroupIds([]);
-    setLinkedDateRange({ start: null, end: null });
     setLinkedEntityFilters({});
   };
 
