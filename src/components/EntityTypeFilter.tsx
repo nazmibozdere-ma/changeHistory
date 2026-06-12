@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
 import { ChevronDownIcon, ChevronUpIcon } from './icons';
-import type { AppInfo, Campaign } from '../data/mockData';
+import type { AppInfo, Campaign, ChangeType } from '../data/mockData';
 import { entityTypes } from '../data/mockData';
 import CampaignSelectorModal from './CampaignSelectorModal';
 import AdGroupSelectorDropdown from './AdGroupSelectorDropdown';
+import EntityFilterDropdown from './EntityFilterDropdown';
 
 interface EntityTypeFilterProps {
   previewApp: AppInfo;
@@ -12,6 +13,8 @@ interface EntityTypeFilterProps {
   groupCampaigns: Campaign[];
   selectedAdGroups: string[];
   onAdGroupsChange: (ids: string[]) => void;
+  selectedEntityTypes: ChangeType[];
+  onEntityTypesChange: (types: ChangeType[]) => void;
 }
 
 export default function EntityTypeFilter({
@@ -21,6 +24,8 @@ export default function EntityTypeFilter({
   groupCampaigns,
   selectedAdGroups,
   onAdGroupsChange,
+  selectedEntityTypes,
+  onEntityTypesChange,
 }: EntityTypeFilterProps) {
   const [campaignOpen, setCampaignOpen] = useState(false);
   const [adGroupOpen, setAdGroupOpen] = useState(false);
@@ -108,6 +113,8 @@ export default function EntityTypeFilter({
           </div>
         );
       })}
+
+      <EntityFilterDropdown selected={selectedEntityTypes} onChange={onEntityTypesChange} />
     </div>
   );
 }

@@ -20,6 +20,7 @@ export default function App() {
   const [selectedActivities, setSelectedActivities] = useState<string[]>([]);
   const [selectedCampaignIds, setSelectedCampaignIds] = useState<string[]>([]);
   const [selectedAdGroupIds, setSelectedAdGroupIds] = useState<string[]>([]);
+  const [selectedEntityTypes, setSelectedEntityTypes] = useState<ChangeType[]>([]);
   const [dateRange, setDateRange] = useState<{ start: Date | null; end: Date | null }>(() => {
     const end = new Date();
     const start = new Date();
@@ -98,6 +99,8 @@ export default function App() {
       if (!matchesCommonFilters(row)) return false;
       if (!matchesDateRange(row, dateRange)) return false;
 
+      if (selectedEntityTypes.length > 0 && !selectedEntityTypes.includes(row.type)) return false;
+
       const entityLower = row.entityName?.toLowerCase() ?? '';
 
       if (row.type === 'Campaign' && selectedCampaignIds.length > 0) {
@@ -109,7 +112,7 @@ export default function App() {
 
       return true;
     });
-  }, [matchesCommonFilters, dateRange, selectedCampaignIds, selectedGroup]);
+  }, [matchesCommonFilters, dateRange, selectedEntityTypes, selectedCampaignIds, selectedGroup]);
 
   // App -> Campaign -> Ad Group cascading filters for the dependent filters tab
   const linkedFiltered = useMemo(() => {
@@ -158,6 +161,7 @@ export default function App() {
     selectedActivities.length > 0 ||
     selectedCampaignIds.length > 0 ||
     selectedAdGroupIds.length > 0 ||
+    selectedEntityTypes.length > 0 ||
     linkedAppIds.length > 0 ||
     linkedCampaignIds.length > 0 ||
     linkedAdGroupIds.length > 0 ||
@@ -168,6 +172,7 @@ export default function App() {
     setSelectedActivities([]);
     setSelectedCampaignIds([]);
     setSelectedAdGroupIds([]);
+    setSelectedEntityTypes([]);
     setLinkedAppIds([]);
     setLinkedCampaignIds([]);
     setLinkedAdGroupIds([]);
@@ -239,6 +244,8 @@ export default function App() {
                     groupCampaigns={selectedGroup.campaigns}
                     selectedAdGroups={selectedAdGroupIds}
                     onAdGroupsChange={setSelectedAdGroupIds}
+                    selectedEntityTypes={selectedEntityTypes}
+                    onEntityTypesChange={setSelectedEntityTypes}
                   />
                 </div>
 
