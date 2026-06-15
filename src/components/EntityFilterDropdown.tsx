@@ -4,6 +4,15 @@ import type { ChangeType } from '../data/mockData';
 
 const options: ChangeType[] = ['Ad', 'Keyword', 'Negative Keyword'];
 
+const optionLabels: Record<ChangeType, string> = {
+  Ad: 'All Ads',
+  Keyword: 'All Keywords',
+  'Negative Keyword': 'All Negative Keywords',
+  'Ad Group': 'Ad Group',
+  Campaign: 'Campaign',
+  App: 'App',
+};
+
 interface EntityFilterDropdownProps {
   selected: ChangeType[];
   onChange: (types: ChangeType[]) => void;
@@ -69,7 +78,7 @@ export default function EntityFilterDropdown({ selected, onChange }: EntityFilte
                   }`}>
                     {checked && <CheckIcon className="text-white" />}
                   </div>
-                  <span className="text-sm text-gray-700">{type}</span>
+                  <span className="text-sm text-gray-700">{optionLabels[type]}</span>
                 </button>
               );
             })}
