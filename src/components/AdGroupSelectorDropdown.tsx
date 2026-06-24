@@ -3,6 +3,8 @@ import { SearchIcon, CheckIcon, XIcon, ChevronUpIcon, ChevronDownIcon } from './
 import type { Campaign } from '../data/mockData';
 import CampaignSelectorModal from './CampaignSelectorModal';
 
+const statusOptions = ['All Status', 'Active', 'Paused'];
+
 interface AdGroupSelectorDropdownProps {
   campaigns: Campaign[];          // already filtered to selected campaigns (or all if none selected)
   selected: string[];             // selected ad group ids
@@ -24,6 +26,8 @@ export default function AdGroupSelectorDropdown({
   const [collapsedCampaigns, setCollapsedCampaigns] = useState<Record<string, boolean>>({});
   const [campaignFilterIds, setCampaignFilterIds] = useState<string[]>([]);
   const [campaignFilterOpen, setCampaignFilterOpen] = useState(false);
+  const [statusFilter, setStatusFilter] = useState('All Status');
+  const [statusOpen, setStatusOpen] = useState(false);
 
   useEffect(() => { setDraft(selected); }, [selected]);
 
@@ -35,10 +39,15 @@ export default function AdGroupSelectorDropdown({
     ? campaigns.filter(c => campaignFilterIds.includes(c.id))
     : campaigns;
 
+  const matchesStatus = (status: 'active' | 'paused') =>
+    statusFilter === 'All Status' ||
+    (statusFilter === 'Active' && status === 'active') ||
+    (statusFilter === 'Paused' && status === 'paused');
+
   const filteredCampaigns = campaignsInScope.map(c => ({
     ...c,
-    adGroups: c.adGroups.filter(ag => ag.name.toLowerCase().includes(search.toLowerCase())),
-  })).filter(c => c.adGroups.length > 0 || !search);
+    adGroups: c.adGroups.filter(ag => ag.name.toLowerCase().includes(search.toLowerCase()) && matchesStatus(ag.status)),
+  })).filter(c => c.adGroups.length > 0 || (!search && statusFilter === 'All Status'));
 
   const toggle = (id: string) =>
     setDraft(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
@@ -95,9 +104,9 @@ export default function AdGroupSelectorDropdown({
         </div>
       )}
 
-      {/* Search */}
-      <div className="px-3 pt-3 pb-2">
-        <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-gray-50 border border-gray-200">
+      {/* Search + Status */}
+      <div className="flex items-center gap-2 px-3 pt-3 pb-2">
+        <div className="flex-1 flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-gray-50 border border-gray-200">
           <SearchIcon className="text-gray-400 shrink-0" />
           <input
             autoFocus
@@ -111,6 +120,30 @@ export default function AdGroupSelectorDropdown({
             <button onClick={() => setSearch('')} className="text-gray-400 hover:text-gray-600">
               <XIcon />
             </button>
+          )}
+        </div>
+
+        <div className="relative">
+          <button
+            onClick={() => setStatusOpen(o => !o)}
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-gray-200 text-xs text-gray-600 hover:bg-gray-50 transition-colors whitespace-nowrap"
+          >
+            <span>{statusFilter}</span>
+            <ChevronDownIcon className="text-gray-400" />
+          </button>
+          {statusOpen && (
+            <div className="absolute right-0 top-full mt-1 w-32 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
+              {statusOptions.map(opt => (
+                <button
+                  key={opt}
+                  onClick={() => { setStatusFilter(opt); setStatusOpen(false); }}
+                  className={`flex items-center justify-between w-full px-3 py-1.5 text-xs text-left hover:bg-gray-50 transition-colors ${statusFilter === opt ? 'text-blue-600 font-medium' : 'text-gray-700'}`}
+                >
+                  {opt}
+                  {statusFilter === opt && <CheckIcon className="text-blue-600" />}
+                </button>
+              ))}
+            </div>
           )}
         </div>
       </div>
