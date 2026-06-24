@@ -28,7 +28,7 @@ export default function App() {
     return { start, end };
   });
 
-  const [activeTab, setActiveTab] = useState<'history' | 'linked'>('history');
+  const [activeTab, setActiveTab] = useState<'history' | 'linked' | 'newLevel'>('history');
   const [linkedAppIds, setLinkedAppIds] = useState<string[]>([]);
   const [linkedCampaignIds, setLinkedCampaignIds] = useState<string[]>([]);
   const [linkedAdGroupIds, setLinkedAdGroupIds] = useState<string[]>([]);
@@ -40,6 +40,16 @@ export default function App() {
   });
   const [linkedEntityFilters, setLinkedEntityFilters] = useState<EntityFilterMap>({});
 
+  const [selectedNewLevelCampaignIds, setSelectedNewLevelCampaignIds] = useState<string[]>([]);
+  const [selectedNewLevelAdGroupIds, setSelectedNewLevelAdGroupIds] = useState<string[]>([]);
+  const [selectedNewLevelEntityTypes, setSelectedNewLevelEntityTypes] = useState<ChangeType[]>([]);
+  const [newLevelDateRange, setNewLevelDateRange] = useState<{ start: Date | null; end: Date | null }>(() => {
+    const end = new Date();
+    const start = new Date();
+    start.setDate(start.getDate() - 30);
+    return { start, end };
+  });
+
   const handleGroupChange = (group: CampaignGroupInfo) => {
     setSelectedGroup(group);
     setSelectedCampaignIds([]);
@@ -47,6 +57,8 @@ export default function App() {
     setLinkedAppIds([]);
     setLinkedCampaignIds([]);
     setLinkedAdGroupIds([]);
+    setSelectedNewLevelCampaignIds([]);
+    setSelectedNewLevelAdGroupIds([]);
   };
 
   // App -> Campaign -> Ad Group cascade for the dependent filters tab
@@ -114,6 +126,26 @@ export default function App() {
     });
   }, [matchesCommonFilters, dateRange, selectedEntityTypes, selectedCampaignIds, selectedGroup]);
 
+  const newLevelFiltered = useMemo(() => {
+    return mockData.filter(row => {
+      if (!matchesCommonFilters(row)) return false;
+      if (!matchesDateRange(row, newLevelDateRange)) return false;
+
+      if (selectedNewLevelEntityTypes.length > 0 && !selectedNewLevelEntityTypes.includes(row.type)) return false;
+
+      const entityLower = row.entityName?.toLowerCase() ?? '';
+
+      if (row.type === 'Campaign' && selectedNewLevelCampaignIds.length > 0) {
+        const selectedNames = selectedGroup.campaigns
+          .filter(c => selectedNewLevelCampaignIds.includes(c.id))
+          .map(c => c.name.toLowerCase());
+        if (!selectedNames.some(n => entityLower.includes(n) || n.includes(entityLower))) return false;
+      }
+
+      return true;
+    });
+  }, [matchesCommonFilters, newLevelDateRange, selectedNewLevelEntityTypes, selectedNewLevelCampaignIds, selectedGroup]);
+
   // App -> Campaign -> Ad Group cascading filters for the dependent filters tab
   const linkedFiltered = useMemo(() => {
     const effectiveCampaigns = linkedCampaignIds.length > 0
@@ -165,7 +197,10 @@ export default function App() {
     linkedAppIds.length > 0 ||
     linkedCampaignIds.length > 0 ||
     linkedAdGroupIds.length > 0 ||
-    Object.values(linkedEntityFilters).some(Boolean);
+    Object.values(linkedEntityFilters).some(Boolean) ||
+    selectedNewLevelCampaignIds.length > 0 ||
+    selectedNewLevelAdGroupIds.length > 0 ||
+    selectedNewLevelEntityTypes.length > 0;
 
   const clearAll = () => {
     setSelectedAgents([]);
@@ -177,6 +212,9 @@ export default function App() {
     setLinkedCampaignIds([]);
     setLinkedAdGroupIds([]);
     setLinkedEntityFilters({});
+    setSelectedNewLevelCampaignIds([]);
+    setSelectedNewLevelAdGroupIds([]);
+    setSelectedNewLevelEntityTypes([]);
   };
 
   return (
@@ -212,6 +250,16 @@ export default function App() {
               >
                 Dependent filters
               </button>
+              <button
+                onClick={() => setActiveTab('newLevel')}
+                className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors ${
+                  activeTab === 'newLevel'
+                    ? 'border-blue-600 text-blue-700'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                New level filters
+              </button>
             </div>
 
             <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100">
@@ -228,8 +276,10 @@ export default function App() {
                 )}
                 {activeTab === 'history' ? (
                   <DateRangePicker value={dateRange} onChange={setDateRange} />
-                ) : (
+                ) : activeTab === 'linked' ? (
                   <DateRangePicker value={linkedDateRange} onChange={setLinkedDateRange} />
+                ) : (
+                  <DateRangePicker value={newLevelDateRange} onChange={setNewLevelDateRange} />
                 )}
               </div>
             </div>
@@ -251,7 +301,7 @@ export default function App() {
 
                 <ChangeHistoryTable data={filtered} />
               </>
-            ) : (
+            ) : activeTab === 'linked' ? (
               <>
                 <div className="flex items-center gap-1 px-4 py-2.5 border-b border-gray-100 bg-gray-50/50">
                   <LinkedEntityFilters
@@ -269,6 +319,23 @@ export default function App() {
                 </div>
 
                 <ChangeHistoryTable data={linkedFiltered} />
+              </>
+            ) : (
+              <>
+                <div className="flex items-center gap-1 px-4 py-2.5 border-b border-gray-100 bg-gray-50/50">
+                  <EntityTypeFilter
+                    previewApp={selectedGroup.apps[0]}
+                    selectedCampaigns={selectedNewLevelCampaignIds}
+                    onCampaignsChange={setSelectedNewLevelCampaignIds}
+                    groupCampaigns={selectedGroup.campaigns}
+                    selectedAdGroups={selectedNewLevelAdGroupIds}
+                    onAdGroupsChange={setSelectedNewLevelAdGroupIds}
+                    selectedEntityTypes={selectedNewLevelEntityTypes}
+                    onEntityTypesChange={setSelectedNewLevelEntityTypes}
+                  />
+                </div>
+
+                <ChangeHistoryTable data={newLevelFiltered} />
               </>
             )}
           </div>
