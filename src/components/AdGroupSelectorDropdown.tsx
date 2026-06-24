@@ -66,12 +66,12 @@ export default function AdGroupSelectorDropdown({
 
   const isCampaignCollapsed = (campaignId: string) => !!collapsedCampaigns[campaignId];
 
-  return (
-    <div className="absolute left-0 top-full mt-1.5 z-50 bg-white border border-gray-200 rounded-xl shadow-lg flex flex-col" style={{ width: '400px', maxHeight: '500px' }}>
+  const panel = (
+    <div className="bg-white border border-gray-200 rounded-xl shadow-lg flex flex-col" style={{ width: enableCampaignFilter ? '460px' : '400px', maxHeight: '560px' }}>
 
       {/* Embedded Campaign filter */}
       {enableCampaignFilter && (
-        <div className="px-3 pt-3 relative">
+        <div className="px-3 pt-3">
           <button
             onClick={() => setCampaignFilterOpen(o => !o)}
             className={`flex items-center gap-1 px-3 py-1.5 rounded-lg border text-sm font-medium transition-all ${
@@ -99,6 +99,7 @@ export default function AdGroupSelectorDropdown({
               selected={campaignFilterIds}
               onConfirm={ids => { setCampaignFilterIds(ids); setCampaignFilterOpen(false); }}
               onCancel={() => setCampaignFilterOpen(false)}
+              asModal
             />
           )}
         </div>
@@ -176,7 +177,12 @@ export default function AdGroupSelectorDropdown({
 
             {selectedExpanded && selectedAdGroups.map(ag => (
               <div key={ag.id} className="flex items-center justify-between px-3 py-1.5 hover:bg-gray-50 transition-colors border-t border-gray-50">
-                <span className="text-xs text-gray-700 truncate flex-1 mr-2">{ag.name}</span>
+                <div className="flex items-center gap-2 flex-1 mr-2 min-w-0">
+                  {enableCampaignFilter && (
+                    <div className={`w-2 h-2 rounded-full shrink-0 ${ag.status === 'active' ? 'bg-green-500' : 'bg-orange-400'}`} />
+                  )}
+                  <span className="text-xs text-gray-700 truncate">{ag.name}</span>
+                </div>
                 <button
                   onClick={() => remove(ag.id)}
                   className="w-4 h-4 rounded-full border border-gray-300 flex items-center justify-center text-gray-400 hover:border-red-400 hover:text-red-500 transition-colors shrink-0"
@@ -193,19 +199,27 @@ export default function AdGroupSelectorDropdown({
           <div className="px-3 py-6 text-xs text-gray-400 text-center">No ad groups found</div>
         ) : (
           filteredCampaigns.map(campaign => {
-            const collapsed = isCampaignCollapsed(campaign.id);
+            const collapsed = !enableCampaignFilter && isCampaignCollapsed(campaign.id);
             return (
               <div key={campaign.id} className="border-b border-gray-50 last:border-0">
                 {/* Campaign header */}
-                <button
-                  onClick={() => toggleCampaignCollapse(campaign.id)}
-                  className="flex items-center gap-2 w-full px-3 py-2.5 hover:bg-gray-50 transition-colors text-left"
-                >
-                  {collapsed ? <ChevronDownIcon className="text-gray-400 shrink-0" /> : <ChevronUpIcon className="text-gray-400 shrink-0" />}
-                  <span className="text-sm font-medium text-blue-600 underline underline-offset-2 truncate">
-                    {campaign.name}
-                  </span>
-                </button>
+                {enableCampaignFilter ? (
+                  <div className="px-3 py-2.5">
+                    <span className="text-sm font-medium text-blue-600 underline underline-offset-2 truncate">
+                      {campaign.name}
+                    </span>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => toggleCampaignCollapse(campaign.id)}
+                    className="flex items-center gap-2 w-full px-3 py-2.5 hover:bg-gray-50 transition-colors text-left"
+                  >
+                    {collapsed ? <ChevronDownIcon className="text-gray-400 shrink-0" /> : <ChevronUpIcon className="text-gray-400 shrink-0" />}
+                    <span className="text-sm font-medium text-blue-600 underline underline-offset-2 truncate">
+                      {campaign.name}
+                    </span>
+                  </button>
+                )}
 
                 {/* Ad groups */}
                 {!collapsed && campaign.adGroups.map(ag => {
@@ -219,6 +233,9 @@ export default function AdGroupSelectorDropdown({
                       <div className={`w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-colors ${checked ? 'bg-blue-600 border-blue-600' : 'border-gray-300'}`}>
                         {checked && <CheckIcon className="text-white" />}
                       </div>
+                      {enableCampaignFilter && (
+                        <div className={`w-2 h-2 rounded-full shrink-0 ${ag.status === 'active' ? 'bg-green-500' : 'bg-orange-400'}`} />
+                      )}
                       <span className="text-sm text-gray-700 truncate">{ag.name}</span>
                     </button>
                   );
@@ -245,5 +262,13 @@ export default function AdGroupSelectorDropdown({
         </button>
       </div>
     </div>
+  );
+
+  return enableCampaignFilter ? (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30" onClick={onCancel}>
+      <div onClick={e => e.stopPropagation()}>{panel}</div>
+    </div>
+  ) : (
+    <div className="absolute left-0 top-full mt-1.5 z-50">{panel}</div>
   );
 }

@@ -8,12 +8,13 @@ interface CampaignSelectorProps {
   selected: string[];
   onConfirm: (selected: string[]) => void;
   onCancel: () => void;
+  asModal?: boolean; // renders as a centered overlay (on top of other modals) instead of an anchored dropdown
 }
 
 const statusOptions = ['All Status', 'Active', 'Paused'];
 const storefrontFilterOptions = ['All Storefronts', ...storefrontOptions];
 
-export default function CampaignSelectorModal({ campaigns, selected, onConfirm, onCancel }: CampaignSelectorProps) {
+export default function CampaignSelectorModal({ campaigns, selected, onConfirm, onCancel, asModal = false }: CampaignSelectorProps) {
   const [draft, setDraft] = useState<string[]>(selected);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('All Status');
@@ -47,8 +48,8 @@ export default function CampaignSelectorModal({ campaigns, selected, onConfirm, 
   const selectAll = () =>
     setDraft(prev => Array.from(new Set([...prev, ...visibleCampaigns.map(c => c.id)])));
 
-  return (
-    <div className="absolute left-0 top-full mt-1.5 z-50 bg-white border border-gray-200 rounded-xl shadow-lg flex flex-col" style={{ width: '360px', maxHeight: '480px' }}>
+  const panel = (
+    <div className="bg-white border border-gray-200 rounded-xl shadow-lg flex flex-col" style={{ width: '360px', maxHeight: '480px' }}>
 
       {/* Search */}
       <div className="px-3 pt-3 pb-2 space-y-2">
@@ -202,5 +203,13 @@ export default function CampaignSelectorModal({ campaigns, selected, onConfirm, 
         </button>
       </div>
     </div>
+  );
+
+  return asModal ? (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/30" onClick={onCancel}>
+      <div onClick={e => e.stopPropagation()}>{panel}</div>
+    </div>
+  ) : (
+    <div className="absolute left-0 top-full mt-1.5 z-50">{panel}</div>
   );
 }
