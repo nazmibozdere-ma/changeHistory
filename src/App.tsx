@@ -228,7 +228,7 @@ export default function App() {
         />
 
         <div className="px-6 py-4">
-          <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
             <div className="flex items-center gap-1 px-4 pt-2 border-b border-gray-100">
               <button
                 onClick={() => setActiveTab('history')}
@@ -299,7 +299,9 @@ export default function App() {
                   />
                 </div>
 
-                <ChangeHistoryTable data={filtered} />
+                <div className="rounded-b-xl overflow-hidden">
+                  <ChangeHistoryTable data={filtered} />
+                </div>
               </>
             ) : activeTab === 'linked' ? (
               <>
@@ -318,7 +320,9 @@ export default function App() {
                   />
                 </div>
 
-                <ChangeHistoryTable data={linkedFiltered} />
+                <div className="rounded-b-xl overflow-hidden">
+                  <ChangeHistoryTable data={linkedFiltered} />
+                </div>
               </>
             ) : (
               <>
@@ -336,7 +340,9 @@ export default function App() {
                   />
                 </div>
 
-                <ChangeHistoryTable data={newLevelFiltered} />
+                <div className="rounded-b-xl overflow-hidden">
+                  <ChangeHistoryTable data={newLevelFiltered} />
+                </div>
               </>
             )}
           </div>
