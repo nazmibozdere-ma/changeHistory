@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { SearchIcon, CheckIcon, XIcon, ChevronUpIcon, ChevronDownIcon } from './icons';
 import type { Campaign } from '../data/mockData';
+import CampaignSelectorModal from './CampaignSelectorModal';
 
 interface AdGroupSelectorDropdownProps {
   campaigns: Campaign[];          // already filtered to selected campaigns (or all if none selected)
   selected: string[];             // selected ad group ids
   onConfirm: (ids: string[]) => void;
   onCancel: () => void;
+  enableCampaignFilter?: boolean; // shows an embedded Campaign filter that narrows the ad groups listed below
 }
 
 export default function AdGroupSelectorDropdown({
@@ -14,11 +16,14 @@ export default function AdGroupSelectorDropdown({
   selected,
   onConfirm,
   onCancel,
+  enableCampaignFilter = false,
 }: AdGroupSelectorDropdownProps) {
   const [draft, setDraft] = useState<string[]>(selected);
   const [search, setSearch] = useState('');
   const [selectedExpanded, setSelectedExpanded] = useState(true);
   const [collapsedCampaigns, setCollapsedCampaigns] = useState<Record<string, boolean>>({});
+  const [campaignFilterIds, setCampaignFilterIds] = useState<string[]>([]);
+  const [campaignFilterOpen, setCampaignFilterOpen] = useState(false);
 
   useEffect(() => { setDraft(selected); }, [selected]);
 
@@ -26,7 +31,11 @@ export default function AdGroupSelectorDropdown({
 
   const selectedAdGroups = allAdGroups.filter(ag => draft.includes(ag.id));
 
-  const filteredCampaigns = campaigns.map(c => ({
+  const campaignsInScope = campaignFilterIds.length > 0
+    ? campaigns.filter(c => campaignFilterIds.includes(c.id))
+    : campaigns;
+
+  const filteredCampaigns = campaignsInScope.map(c => ({
     ...c,
     adGroups: c.adGroups.filter(ag => ag.name.toLowerCase().includes(search.toLowerCase())),
   })).filter(c => c.adGroups.length > 0 || !search);
@@ -50,6 +59,41 @@ export default function AdGroupSelectorDropdown({
 
   return (
     <div className="absolute left-0 top-full mt-1.5 z-50 bg-white border border-gray-200 rounded-xl shadow-lg flex flex-col" style={{ width: '400px', maxHeight: '500px' }}>
+
+      {/* Embedded Campaign filter */}
+      {enableCampaignFilter && (
+        <div className="px-3 pt-3 relative">
+          <button
+            onClick={() => setCampaignFilterOpen(o => !o)}
+            className={`flex items-center gap-1 px-3 py-1.5 rounded-lg border text-sm font-medium transition-all ${
+              campaignFilterOpen
+                ? 'bg-white border-blue-400 text-blue-700 shadow-sm'
+                : campaignFilterIds.length > 0
+                ? 'bg-blue-50 border-blue-300 text-blue-700'
+                : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            <span>Campaign</span>
+            {campaignFilterIds.length > 0 && (
+              <span className="text-xs px-1 rounded font-semibold text-blue-600">
+                ({campaignFilterIds.length})
+              </span>
+            )}
+            {campaignFilterOpen
+              ? <ChevronUpIcon className="text-blue-500" />
+              : <ChevronDownIcon className={campaignFilterIds.length > 0 ? 'text-blue-500' : 'text-gray-400'} />}
+          </button>
+
+          {campaignFilterOpen && (
+            <CampaignSelectorModal
+              campaigns={campaigns}
+              selected={campaignFilterIds}
+              onConfirm={ids => { setCampaignFilterIds(ids); setCampaignFilterOpen(false); }}
+              onCancel={() => setCampaignFilterOpen(false)}
+            />
+          )}
+        </div>
+      )}
 
       {/* Search */}
       <div className="px-3 pt-3 pb-2">

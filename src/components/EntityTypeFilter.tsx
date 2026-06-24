@@ -15,6 +15,7 @@ interface EntityTypeFilterProps {
   onAdGroupsChange: (ids: string[]) => void;
   selectedEntityTypes: ChangeType[];
   onEntityTypesChange: (types: ChangeType[]) => void;
+  enableAdGroupCampaignFilter?: boolean;
 }
 
 export default function EntityTypeFilter({
@@ -26,6 +27,7 @@ export default function EntityTypeFilter({
   onAdGroupsChange,
   selectedEntityTypes,
   onEntityTypesChange,
+  enableAdGroupCampaignFilter = false,
 }: EntityTypeFilterProps) {
   const [campaignOpen, setCampaignOpen] = useState(false);
   const [adGroupOpen, setAdGroupOpen] = useState(false);
@@ -108,6 +110,7 @@ export default function EntityTypeFilter({
                 selected={selectedAdGroups}
                 onConfirm={ids => { onAdGroupsChange(ids); setAdGroupOpen(false); }}
                 onCancel={() => setAdGroupOpen(false)}
+                enableCampaignFilter={enableAdGroupCampaignFilter}
               />
             )}
           </div>

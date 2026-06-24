@@ -332,6 +332,7 @@ export default function App() {
                     onAdGroupsChange={setSelectedNewLevelAdGroupIds}
                     selectedEntityTypes={selectedNewLevelEntityTypes}
                     onEntityTypesChange={setSelectedNewLevelEntityTypes}
+                    enableAdGroupCampaignFilter
                   />
                 </div>
 
