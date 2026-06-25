@@ -21,39 +21,35 @@ const faqs = [
 
 export default function HelpDrawer({ onClose }: HelpDrawerProps) {
   return (
-    <div className="fixed inset-0 z-50">
-      <div className="absolute inset-0 bg-black/30" onClick={onClose} />
+    <div className="w-96 shrink-0 bg-white border-l border-gray-200 flex flex-col">
+      <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+        <h2 className="text-lg font-semibold text-gray-900">Help</h2>
+        <button
+          onClick={onClose}
+          className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+        >
+          <XIcon />
+        </button>
+      </div>
 
-      <div className="absolute right-0 top-0 h-full w-96 bg-white shadow-xl flex flex-col">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-          <h2 className="text-lg font-semibold text-gray-900">Help</h2>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
-          >
-            <XIcon />
-          </button>
+      <div className="flex-1 overflow-y-auto px-5 py-4 space-y-6">
+        <div>
+          <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Frequently asked questions</h3>
+          <div className="space-y-4">
+            {faqs.map(faq => (
+              <div key={faq.question}>
+                <div className="text-sm font-medium text-gray-800">{faq.question}</div>
+                <div className="text-sm text-gray-500 mt-1">{faq.answer}</div>
+              </div>
+            ))}
+          </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-6">
-          <div>
-            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Frequently asked questions</h3>
-            <div className="space-y-4">
-              {faqs.map(faq => (
-                <div key={faq.question}>
-                  <div className="text-sm font-medium text-gray-800">{faq.question}</div>
-                  <div className="text-sm text-gray-500 mt-1">{faq.answer}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Need more help?</h3>
-            <p className="text-sm text-gray-500">
-              Reach out to your MobileAction account manager or email support@mobileaction.co.
-            </p>
-          </div>
+        <div>
+          <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Need more help?</h3>
+          <p className="text-sm text-gray-500">
+            Reach out to your MobileAction account manager or email support@mobileaction.co.
+          </p>
         </div>
       </div>
     </div>

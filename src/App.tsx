@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import Sidebar from './components/Sidebar';
 import TopBar from './components/TopBar';
+import HelpDrawer from './components/HelpDrawer';
 import AgentFilterDropdown from './components/AgentFilterDropdown';
 import ActivityFilterDropdown from './components/ActivityFilterDropdown';
 import EntityTypeFilter from './components/EntityTypeFilter';
@@ -15,6 +16,7 @@ type EntityFilterMap = Partial<Record<ChangeType, string>>;
 export default function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState<CampaignGroupInfo>(campaignGroups[0]);
+  const [helpOpen, setHelpOpen] = useState(false);
 
   const [selectedAgents, setSelectedAgents] = useState<string[]>([]);
   const [selectedActivities, setSelectedActivities] = useState<string[]>([]);
@@ -225,6 +227,7 @@ export default function App() {
         <TopBar
           selectedGroup={selectedGroup}
           onGroupChange={handleGroupChange}
+          onHelpClick={() => setHelpOpen(true)}
         />
 
         <div className="px-6 py-4">
@@ -348,6 +351,8 @@ export default function App() {
           </div>
         </div>
       </div>
+
+      {helpOpen && <HelpDrawer onClose={() => setHelpOpen(false)} />}
     </div>
   );
 }

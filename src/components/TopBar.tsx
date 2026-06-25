@@ -2,18 +2,17 @@ import { useState, useRef, useEffect } from 'react';
 import { BellIcon, QuestionIcon, SparkleIcon, CheckIcon, SearchIcon } from './icons';
 import type { CampaignGroupInfo } from '../data/mockData';
 import { campaignGroups } from '../data/mockData';
-import HelpDrawer from './HelpDrawer';
 
 interface TopBarProps {
   selectedGroup: CampaignGroupInfo;
   onGroupChange: (group: CampaignGroupInfo) => void;
+  onHelpClick: () => void;
 }
 
-export default function TopBar({ selectedGroup, onGroupChange }: TopBarProps) {
+export default function TopBar({ selectedGroup, onGroupChange, onHelpClick }: TopBarProps) {
   const selected = selectedGroup;
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
-  const [helpOpen, setHelpOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -45,7 +44,7 @@ export default function TopBar({ selectedGroup, onGroupChange }: TopBarProps) {
 
         {/* Help */}
         <button
-          onClick={() => setHelpOpen(true)}
+          onClick={onHelpClick}
           className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-gray-500 hover:bg-gray-100 transition-colors"
         >
           <QuestionIcon />
@@ -130,8 +129,6 @@ export default function TopBar({ selectedGroup, onGroupChange }: TopBarProps) {
         </div>
 
       </div>
-
-      {helpOpen && <HelpDrawer onClose={() => setHelpOpen(false)} />}
     </div>
   );
 }
