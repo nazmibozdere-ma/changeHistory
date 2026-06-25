@@ -67,7 +67,10 @@ export default function AdGroupSelectorDropdown({
   const isCampaignCollapsed = (campaignId: string) => !!collapsedCampaigns[campaignId];
 
   const panel = (
-    <div className="bg-white border border-gray-200 rounded-xl shadow-lg flex flex-col" style={{ width: enableCampaignFilter ? '460px' : '400px', maxHeight: '560px' }}>
+    <div
+      className="bg-white border border-gray-200 rounded-xl shadow-lg flex flex-col"
+      style={enableCampaignFilter ? { width: '460px', height: '560px' } : { width: '400px', maxHeight: '560px' }}
+    >
 
       {/* Embedded Campaign filter */}
       {enableCampaignFilter && (
@@ -100,6 +103,8 @@ export default function AdGroupSelectorDropdown({
               onConfirm={ids => { setCampaignFilterIds(ids); setCampaignFilterOpen(false); }}
               onCancel={() => setCampaignFilterOpen(false)}
               asModal
+              width="460px"
+              maxHeight="560px"
             />
           )}
         </div>

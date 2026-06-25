@@ -9,12 +9,14 @@ interface CampaignSelectorProps {
   onConfirm: (selected: string[]) => void;
   onCancel: () => void;
   asModal?: boolean; // renders as a centered overlay (on top of other modals) instead of an anchored dropdown
+  width?: string;
+  maxHeight?: string;
 }
 
 const statusOptions = ['All Status', 'Active', 'Paused'];
 const storefrontFilterOptions = ['All Storefronts', ...storefrontOptions];
 
-export default function CampaignSelectorModal({ campaigns, selected, onConfirm, onCancel, asModal = false }: CampaignSelectorProps) {
+export default function CampaignSelectorModal({ campaigns, selected, onConfirm, onCancel, asModal = false, width = '360px', maxHeight = '480px' }: CampaignSelectorProps) {
   const [draft, setDraft] = useState<string[]>(selected);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('All Status');
@@ -49,7 +51,7 @@ export default function CampaignSelectorModal({ campaigns, selected, onConfirm, 
     setDraft(prev => Array.from(new Set([...prev, ...visibleCampaigns.map(c => c.id)])));
 
   const panel = (
-    <div className="bg-white border border-gray-200 rounded-xl shadow-lg flex flex-col" style={{ width: '360px', maxHeight: '480px' }}>
+    <div className="bg-white border border-gray-200 rounded-xl shadow-lg flex flex-col" style={asModal ? { width, height: maxHeight } : { width, maxHeight }}>
 
       {/* Search */}
       <div className="px-3 pt-3 pb-2 space-y-2">
