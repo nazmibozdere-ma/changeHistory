@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { SearchIcon, XIcon } from './icons';
+import { SearchIcon, XIcon, ChevronDownIcon, ChevronUpIcon } from './icons';
 
 interface HelpDrawerProps {
   onClose: () => void;
@@ -10,6 +10,11 @@ interface HelpArticle {
   summary: string;
   url: string;
   inline?: boolean; // opens within the drawer instead of linking out
+}
+
+interface HelpWidget {
+  title: string;
+  articles: HelpArticle[];
 }
 
 type ArticleBlock =
@@ -59,37 +64,157 @@ const cppAbTestingContent: ArticleBlock[] = [
   { type: 'paragraph', text: 'If no variant clearly outperforms the others, you can still review metrics such as impressions, conversion rate, and tap-through rate to choose the most promising option. A "no significant difference" result means the tested variants are likely to perform similarly over time.' },
 ];
 
-const articles: HelpArticle[] = [
+const widgets: HelpWidget[] = [
   {
-    title: 'About CPP A/B Testing',
-    summary: 'How MobileAction\'s CPP A/B Testing feature automates comparing Apple Ads custom product pages to identify top-performing variants.',
-    url: 'https://helpcenter.mobileaction.co/en/about-cpp-a-b-testing',
-    inline: true,
+    title: 'Apple Ads Integration',
+    articles: [
+      {
+        title: 'Apple Ads Integration Overview',
+        summary: 'MobileAction connects directly to Apple Ads accounts to provide a unified workspace for managing campaigns.',
+        url: 'https://helpcenter.mobileaction.co/en/apple-ads-integration-overview',
+      },
+      {
+        title: 'Requirements for Apple Ads Integration',
+        summary: 'You need an active Apple Ads account with admin access and a MobileAction Apple Ads CMP account to begin.',
+        url: 'http://helpcenter.mobileaction.co/en/requirements-for-apple-ads-integration',
+      },
+    ],
   },
   {
-    title: 'What are the requirements and limits for CPP A/B Testing',
-    summary: 'Prerequisites for running CPP A/B tests, including 28 days of performance data, supported test configurations, precision ranges, confidence levels, and traffic thresholds.',
-    url: 'https://helpcenter.mobileaction.co/en/what-are-the-requirements-and-limits-for-cpp-a-b-testing?hsLang=en',
+    title: 'Overview',
+    articles: [
+      {
+        title: 'Overview',
+        summary: 'A dashboard consolidating Apple Ads campaign performance and competitor activity in one place.',
+        url: 'https://helpcenter.mobileaction.co/en/overview-apple-ads-cmp',
+      },
+      {
+        title: 'Navigate to Overview',
+        summary: 'How to access the Overview dashboard, select an app to review, and adjust the date range.',
+        url: 'https://helpcenter.mobileaction.co/en/navigate-to-overview',
+      },
+    ],
   },
   {
-    title: 'Test setup options in CPP A/B Testing',
-    summary: 'Comparing the four test setup methods — Parallel (single or multiple ad groups) and Switch (ad group or ad level) — to help you choose the right one.',
-    url: 'https://helpcenter.mobileaction.co/en/test-setup-options-in-cpp-a-b-testing?hsLang=en',
+    title: 'Ads Manager',
+    articles: [
+      {
+        title: 'Ads Manager Overview',
+        summary: 'Manage and monitor Apple Ads campaigns across multiple account levels, with campaign creation and bulk editing.',
+        url: 'https://helpcenter.mobileaction.co/en/ads-manager-overview',
+      },
+      {
+        title: 'What is Ads Manager',
+        summary: 'A campaign management and reporting tool to monitor, analyze, and manage Apple Ads campaigns in one place.',
+        url: 'https://helpcenter.mobileaction.co/en/what-is-ads-manager',
+      },
+    ],
   },
   {
-    title: 'Test creation in CPP A/B Testing',
-    summary: 'How to set up product page tests using Parallel tests (multiple or single ad group) and Switch tests (ad group or ad-based rotation).',
-    url: 'https://helpcenter.mobileaction.co/en/test-creation-in-cpp-a-b-testing?hsLang=en',
+    title: 'Automations',
+    articles: [
+      {
+        title: 'Automations Overview',
+        summary: 'Set up rules that automatically monitor Apple Ads performance and execute actions without manual intervention.',
+        url: 'https://helpcenter.mobileaction.co/en/automations-overview',
+      },
+      {
+        title: 'How to create an automation',
+        summary: 'Use pre-built templates for common goals, or build custom rules with full control over conditions and actions.',
+        url: 'https://helpcenter.mobileaction.co/en/how-to-create-an-automation',
+      },
+    ],
   },
   {
-    title: 'How do you monitor and interpret tests in CPP A/B Testing',
-    summary: 'Viewing test performance metrics in table and chart formats, interpreting confidence level badges, and accessing test event logs from the dashboard.',
-    url: 'https://helpcenter.mobileaction.co/en/how-to-monitor-cpp-a-b-tests-in-the-dashboard?hsLang=en',
+    title: 'CPP A/B Testing',
+    articles: [
+      {
+        title: 'Introduction to CPP A/B Testing',
+        summary: 'An overview of automated A/B experiments across custom product page variants with statistically reliable results.',
+        url: 'https://helpcenter.mobileaction.co/en/introduction-to-cpp-a-b-testing',
+      },
+      {
+        title: 'About CPP A/B Testing',
+        summary: 'How CPP A/B Testing automates comparing Apple Ads custom product pages to identify top-performing variants.',
+        url: 'https://helpcenter.mobileaction.co/en/about-cpp-a-b-testing',
+        inline: true,
+      },
+    ],
   },
   {
-    title: 'Test health and issue management in CPP A/B Testing',
-    summary: 'How to keep CPP A/B tests healthy by avoiding bid or budget changes, managing traffic fluctuations, and shortening test duration when needed.',
-    url: 'https://helpcenter.mobileaction.co/en/keep-cpp-a-b-tests-healthy-and-fix-issues?hsLang=en',
+    title: 'AI Keyword Planner',
+    articles: [
+      {
+        title: 'AI Keyword Planner Overview',
+        summary: 'Discover, evaluate, and integrate keywords into Apple Ads campaigns through a unified workflow.',
+        url: 'https://helpcenter.mobileaction.co/en/ai-keyword-planner-overview',
+      },
+      {
+        title: 'Requirements and limits for AI Keyword Planner',
+        summary: 'Requires an active Apple Ads integration; discovery is limited to one storefront per session with up to 300 keyword recommendations.',
+        url: 'https://helpcenter.mobileaction.co/en/requirements-and-limits-for-ai-keyword-planner',
+      },
+    ],
+  },
+  {
+    title: 'AI Smart Bidding',
+    articles: [
+      {
+        title: 'AI Smart Bidding Overview',
+        summary: 'Automatically adjusts keyword bids to optimize toward CPI, CPA, cost per goal, ROAS, or impression share.',
+        url: 'https://helpcenter.mobileaction.co/en/ai-smart-bidding-overview',
+      },
+      {
+        title: 'About AI Smart Bidding',
+        summary: 'Keeps keyword bids aligned with your campaign goals by automatically adjusting bids based on selected performance metrics.',
+        url: 'https://helpcenter.mobileaction.co/en/about-ai-smart-bidding',
+      },
+    ],
+  },
+  {
+    title: 'Budget Allocation',
+    articles: [
+      {
+        title: 'Budget Allocation Overview',
+        summary: 'Maximize budget usage without overspending through steady pacing and budget oversight.',
+        url: 'https://helpcenter.mobileaction.co/en/budget-allocation-overview',
+      },
+      {
+        title: 'Set up a budget allocation group',
+        summary: 'How to create a budget allocation group to distribute campaign budgets using daily or monthly spending caps.',
+        url: 'https://helpcenter.mobileaction.co/en/set-up-a-budget-allocation-group',
+      },
+    ],
+  },
+  {
+    title: 'Benchmarks',
+    articles: [
+      {
+        title: 'Benchmarks Overview',
+        summary: 'Evaluate your Apple Ads performance against industry standards across countries, categories, and ad placements.',
+        url: 'https://helpcenter.mobileaction.co/en/benchmarks-apple-ads',
+      },
+      {
+        title: 'About Benchmarks',
+        summary: 'Compare your campaign performance against aggregated industry data to identify optimization opportunities.',
+        url: 'https://helpcenter.mobileaction.co/en/about-benchmarks',
+      },
+    ],
+  },
+  {
+    title: 'MMP Integration',
+    articles: [
+      {
+        title: 'MMP Integration',
+        summary: 'A Mobile Measurement Partner acts as a neutral attribution layer for tracking post-install events alongside Apple Ads data.',
+        url: 'https://helpcenter.mobileaction.co/en/mmp-integration',
+      },
+      {
+        title: 'About MMP Integration',
+        summary: 'An MMP independently verifies where your app installs come from and tracks in-app user behavior after install.',
+        url: 'https://helpcenter.mobileaction.co/en/about-mmp-integration',
+      },
+    ],
   },
 ];
 
@@ -111,12 +236,37 @@ function ExternalLinkIcon({ className = '' }: { className?: string }) {
 
 export default function HelpDrawer({ onClose }: HelpDrawerProps) {
   const [search, setSearch] = useState('');
+  const [openWidgets, setOpenWidgets] = useState<Set<string>>(new Set());
   const [openArticle, setOpenArticle] = useState<HelpArticle | null>(null);
 
-  const filtered = articles.filter(a => {
-    const term = search.toLowerCase();
-    return a.title.toLowerCase().includes(term) || a.summary.toLowerCase().includes(term);
-  });
+  const toggleWidget = (title: string) =>
+    setOpenWidgets(prev => {
+      const next = new Set(prev);
+      next.has(title) ? next.delete(title) : next.add(title);
+      return next;
+    });
+
+  const term = search.trim().toLowerCase();
+  const isSearching = term.length > 0;
+
+  const visibleWidgets = widgets
+    .map(widget => {
+      if (!isSearching) {
+        return { ...widget, displayArticles: widget.articles, expanded: openWidgets.has(widget.title), matched: true };
+      }
+      const matchingArticles = widget.articles.filter(
+        a => a.title.toLowerCase().includes(term) || a.summary.toLowerCase().includes(term)
+      );
+      const titleMatches = widget.title.toLowerCase().includes(term);
+      const matched = titleMatches || matchingArticles.length > 0;
+      return {
+        ...widget,
+        displayArticles: matchingArticles.length > 0 ? matchingArticles : widget.articles,
+        expanded: matched,
+        matched,
+      };
+    })
+    .filter(widget => widget.matched);
 
   return (
     <div className="w-96 shrink-0 bg-white border-l border-gray-200 flex flex-col">
@@ -179,37 +329,57 @@ export default function HelpDrawer({ onClose }: HelpDrawerProps) {
             </div>
           </div>
 
+          <p className="px-5 pb-3 text-sm text-gray-500">
+            Welcome to MobileAction's Help Desk. Browse a topic below or search to find what you need.
+          </p>
+
           <div className="flex-1 overflow-y-auto px-5 py-2">
-            {filtered.length === 0 ? (
+            {visibleWidgets.length === 0 ? (
               <div className="px-1 py-6 text-sm text-gray-400 text-center">No articles found</div>
             ) : (
-              <div className="divide-y divide-gray-100">
-                {filtered.map(article =>
-                  article.inline ? (
+              <div className="space-y-2">
+                {visibleWidgets.map(widget => (
+                  <div key={widget.title} className="border border-gray-200 rounded-lg overflow-hidden">
                     <button
-                      key={article.url}
-                      onClick={() => setOpenArticle(article)}
-                      className="block w-full py-3 hover:bg-gray-50 -mx-1 px-1 rounded-lg transition-colors text-left"
+                      onClick={() => !isSearching && toggleWidget(widget.title)}
+                      className="flex items-center justify-between w-full px-3 py-2.5 bg-gray-50 hover:bg-gray-100 transition-colors text-left"
                     >
-                      <div className="text-sm font-medium text-blue-700">{article.title}</div>
-                      <div className="text-sm text-gray-500 mt-1">{article.summary}</div>
+                      <span className="text-sm font-medium text-gray-800">{widget.title}</span>
+                      {widget.expanded ? <ChevronUpIcon className="text-gray-400" /> : <ChevronDownIcon className="text-gray-400" />}
                     </button>
-                  ) : (
-                    <a
-                      key={article.url}
-                      href={article.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block py-3 hover:bg-gray-50 -mx-1 px-1 rounded-lg transition-colors"
-                    >
-                      <div className="flex items-center gap-1.5 text-sm font-medium text-blue-700">
-                        <span>{article.title}</span>
-                        <ExternalLinkIcon className="text-blue-400 shrink-0" />
+
+                    {widget.expanded && (
+                      <div className="divide-y divide-gray-100">
+                        {widget.displayArticles.map(article =>
+                          article.inline ? (
+                            <button
+                              key={article.url}
+                              onClick={() => setOpenArticle(article)}
+                              className="block w-full px-3 py-2.5 hover:bg-gray-50 transition-colors text-left"
+                            >
+                              <div className="text-sm font-medium text-blue-700">{article.title}</div>
+                              <div className="text-xs text-gray-500 mt-0.5">{article.summary}</div>
+                            </button>
+                          ) : (
+                            <a
+                              key={article.url}
+                              href={article.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="block px-3 py-2.5 hover:bg-gray-50 transition-colors"
+                            >
+                              <div className="flex items-center gap-1.5 text-sm font-medium text-blue-700">
+                                <span>{article.title}</span>
+                                <ExternalLinkIcon className="text-blue-400 shrink-0" />
+                              </div>
+                              <div className="text-xs text-gray-500 mt-0.5">{article.summary}</div>
+                            </a>
+                          )
+                        )}
                       </div>
-                      <div className="text-sm text-gray-500 mt-1">{article.summary}</div>
-                    </a>
-                  )
-                )}
+                    )}
+                  </div>
+                ))}
               </div>
             )}
           </div>
