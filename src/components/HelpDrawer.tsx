@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { SearchIcon, XIcon, ChevronDownIcon, ChevronUpIcon } from './icons';
+import { SearchIcon, XIcon, QuestionIcon } from './icons';
 
 interface HelpDrawerProps {
   onClose: () => void;
@@ -234,53 +234,73 @@ function ExternalLinkIcon({ className = '' }: { className?: string }) {
   );
 }
 
+function ArticleRow({ article, onOpenInline }: { article: HelpArticle; onOpenInline: (a: HelpArticle) => void }) {
+  if (article.inline) {
+    return (
+      <button
+        onClick={() => onOpenInline(article)}
+        className="block w-full px-3 py-2.5 hover:bg-gray-50 transition-colors text-left"
+      >
+        <div className="text-sm font-medium text-blue-700">{article.title}</div>
+        <div className="text-xs text-gray-500 mt-0.5">{article.summary}</div>
+      </button>
+    );
+  }
+  return (
+    <a
+      href={article.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="block px-3 py-2.5 hover:bg-gray-50 transition-colors"
+    >
+      <div className="flex items-center gap-1.5 text-sm font-medium text-blue-700">
+        <span>{article.title}</span>
+        <ExternalLinkIcon className="text-blue-400 shrink-0" />
+      </div>
+      <div className="text-xs text-gray-500 mt-0.5">{article.summary}</div>
+    </a>
+  );
+}
+
 export default function HelpDrawer({ onClose }: HelpDrawerProps) {
   const [search, setSearch] = useState('');
-  const [openWidgets, setOpenWidgets] = useState<Set<string>>(new Set());
+  const [activeWidget, setActiveWidget] = useState<HelpWidget | null>(null);
   const [openArticle, setOpenArticle] = useState<HelpArticle | null>(null);
-
-  const toggleWidget = (title: string) =>
-    setOpenWidgets(prev => {
-      const next = new Set(prev);
-      next.has(title) ? next.delete(title) : next.add(title);
-      return next;
-    });
 
   const term = search.trim().toLowerCase();
   const isSearching = term.length > 0;
 
-  const visibleWidgets = widgets
-    .map(widget => {
-      if (!isSearching) {
-        return { ...widget, displayArticles: widget.articles, expanded: openWidgets.has(widget.title), matched: true };
-      }
-      const matchingArticles = widget.articles.filter(
-        a => a.title.toLowerCase().includes(term) || a.summary.toLowerCase().includes(term)
-      );
-      const titleMatches = widget.title.toLowerCase().includes(term);
-      const matched = titleMatches || matchingArticles.length > 0;
-      return {
-        ...widget,
-        displayArticles: matchingArticles.length > 0 ? matchingArticles : widget.articles,
-        expanded: matched,
-        matched,
-      };
-    })
-    .filter(widget => widget.matched);
+  const searchResults = isSearching
+    ? widgets.flatMap(widget =>
+        widget.articles
+          .filter(a => a.title.toLowerCase().includes(term) || a.summary.toLowerCase().includes(term) || widget.title.toLowerCase().includes(term))
+          .map(article => ({ article, widget }))
+      )
+    : [];
+
+  const openInlineArticle = (article: HelpArticle, widget: HelpWidget) => {
+    setActiveWidget(widget);
+    setOpenArticle(article);
+  };
+
+  const handleBack = () => {
+    if (openArticle) setOpenArticle(null);
+    else if (activeWidget) setActiveWidget(null);
+  };
 
   return (
     <div className="w-96 shrink-0 bg-white border-l border-gray-200 flex flex-col">
       <div className="flex items-center gap-2 px-5 py-4 border-b border-gray-100">
-        {openArticle && (
+        {(openArticle || activeWidget) && (
           <button
-            onClick={() => setOpenArticle(null)}
+            onClick={handleBack}
             className="p-1.5 -ml-1.5 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors shrink-0"
           >
             <BackArrowIcon />
           </button>
         )}
         <h2 className="text-lg font-semibold text-gray-900 truncate flex-1">
-          {openArticle ? openArticle.title : 'Quick Help'}
+          {openArticle ? openArticle.title : activeWidget ? activeWidget.title : 'Quick Help'}
         </h2>
         <button
           onClick={onClose}
@@ -308,6 +328,14 @@ export default function HelpDrawer({ onClose }: HelpDrawerProps) {
             return <p key={i} className="text-sm text-gray-600">{block.text}</p>;
           })}
         </div>
+      ) : activeWidget ? (
+        <div className="flex-1 overflow-y-auto px-5 py-2">
+          <div className="divide-y divide-gray-100 border border-gray-200 rounded-lg overflow-hidden">
+            {activeWidget.articles.map(article => (
+              <ArticleRow key={article.url} article={article} onOpenInline={a => setOpenArticle(a)} />
+            ))}
+          </div>
+        </div>
       ) : (
         <>
           <div className="px-5 pt-4 pb-2">
@@ -329,60 +357,44 @@ export default function HelpDrawer({ onClose }: HelpDrawerProps) {
             </div>
           </div>
 
-          <p className="px-5 pb-3 text-sm text-gray-500">
-            Welcome to MobileAction's Help Desk. Browse a topic below or search to find what you need.
-          </p>
+          {isSearching ? (
+            <div className="flex-1 overflow-y-auto px-5 py-2">
+              {searchResults.length === 0 ? (
+                <div className="px-1 py-6 text-sm text-gray-400 text-center">No articles found</div>
+              ) : (
+                <div className="divide-y divide-gray-100 border border-gray-200 rounded-lg overflow-hidden">
+                  {searchResults.map(({ article, widget }) => (
+                    <ArticleRow key={article.url} article={article} onOpenInline={a => openInlineArticle(a, widget)} />
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : (
+            <>
+              <div className="flex flex-col items-center text-center px-5 pt-2 pb-4">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-violet-100 to-blue-100 flex items-center justify-center mb-3">
+                  <QuestionIcon className="w-6 h-6 text-violet-600" />
+                </div>
+                <p className="text-sm text-gray-500 max-w-[260px]">
+                  Welcome to MobileAction's Help Desk. Browse a topic below or search to find what you need.
+                </p>
+              </div>
 
-          <div className="flex-1 overflow-y-auto px-5 py-2">
-            {visibleWidgets.length === 0 ? (
-              <div className="px-1 py-6 text-sm text-gray-400 text-center">No articles found</div>
-            ) : (
-              <div className="space-y-2">
-                {visibleWidgets.map(widget => (
-                  <div key={widget.title} className="border border-gray-200 rounded-lg overflow-hidden">
+              <div className="flex-1 overflow-y-auto px-5 py-2">
+                <div className="grid grid-cols-2 gap-3">
+                  {widgets.map(widget => (
                     <button
-                      onClick={() => !isSearching && toggleWidget(widget.title)}
-                      className="flex items-center justify-between w-full px-3 py-2.5 bg-gray-50 hover:bg-gray-100 transition-colors text-left"
+                      key={widget.title}
+                      onClick={() => setActiveWidget(widget)}
+                      className="aspect-square rounded-xl border border-gray-200 hover:border-blue-300 hover:bg-blue-50/50 transition-colors flex items-center justify-center text-center p-3"
                     >
                       <span className="text-sm font-medium text-gray-800">{widget.title}</span>
-                      {widget.expanded ? <ChevronUpIcon className="text-gray-400" /> : <ChevronDownIcon className="text-gray-400" />}
                     </button>
-
-                    {widget.expanded && (
-                      <div className="divide-y divide-gray-100">
-                        {widget.displayArticles.map(article =>
-                          article.inline ? (
-                            <button
-                              key={article.url}
-                              onClick={() => setOpenArticle(article)}
-                              className="block w-full px-3 py-2.5 hover:bg-gray-50 transition-colors text-left"
-                            >
-                              <div className="text-sm font-medium text-blue-700">{article.title}</div>
-                              <div className="text-xs text-gray-500 mt-0.5">{article.summary}</div>
-                            </button>
-                          ) : (
-                            <a
-                              key={article.url}
-                              href={article.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="block px-3 py-2.5 hover:bg-gray-50 transition-colors"
-                            >
-                              <div className="flex items-center gap-1.5 text-sm font-medium text-blue-700">
-                                <span>{article.title}</span>
-                                <ExternalLinkIcon className="text-blue-400 shrink-0" />
-                              </div>
-                              <div className="text-xs text-gray-500 mt-0.5">{article.summary}</div>
-                            </a>
-                          )
-                        )}
-                      </div>
-                    )}
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            )}
-          </div>
+            </>
+          )}
         </>
       )}
     </div>
